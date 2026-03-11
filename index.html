@@ -44,7 +44,7 @@
           <div class="form-group">
             <label class="form-label">临时验证码</label>
             <input type="text" class="input-field input-mono" id="auth-code" placeholder="请输入验证码" maxlength="7" autocomplete="off">
-            <div class="form-hint" id="code-hint">请在右侧欢迎邮件中查找验证码</div>
+            <div class="form-hint" id="code-hint">请根据右侧邮件中的提示拼合验证码</div>
           </div>
 
           <button class="btn-primary login-btn" id="login-btn" onclick="attemptLogin()">
@@ -59,13 +59,14 @@
         </div>
       </div>
 
-      <!-- 右侧：欢迎邮件 -->
+      <!-- 右侧：邮件面板 -->
       <div class="email-panel card fade-in">
         <div class="email-header">
           <span class="email-icon">📧</span>
-          <span class="email-title">待读邮件 (1)</span>
+          <span class="email-title">待读邮件 (2)</span>
         </div>
 
+        <!-- 邮件1：授权通知（验证码被加密了） -->
         <div class="email-item">
           <div class="email-meta">
             <span class="email-from">system@helplinezero.com</span>
@@ -75,22 +76,33 @@
           <div class="email-body">
             <p>审计员，你好：</p>
             <p>根据 P1 级事故响应流程，你已被临时授权接入 HZ-7 Incident #441 的审计调查权限。</p>
-            <p>请使用以下临时验证码登录夜班审计终端：</p>
-            <div class="email-code-box" id="code-box-locked">
-              <span class="email-code-label">临时验证码</span>
-              <span class="email-code-value" style="filter:blur(6px);user-select:none;" id="code-blurred">NA-0441</span>
-              <button style="display:block;margin:8px auto 0;padding:6px 16px;font-size:12px;font-family:inherit;background:rgba(58,123,213,0.15);color:var(--accent-blue);border:1px solid var(--accent-blue);border-radius:4px;cursor:pointer;" onclick="revealCode()">
-                🔐 安全验证 — 点击确认身份以查看
-              </button>
+            <p>你的临时验证码格式为：<strong>{前缀}-{事故编号的4位数字}</strong></p>
+            <div class="email-code-box" style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);">
+              <span class="email-code-label" style="color:var(--accent-red);">⚠️ 验证码传输异常</span>
+              <span style="font-size:12px;color:var(--text-secondary);">验证码因网络异常未能完整显示。<br>请根据下方安全提示和系统公告中的信息自行拼合。</span>
             </div>
-            <p>注意事项：</p>
+            <p style="margin-top:8px;"><strong>安全提示：</strong></p>
             <ul>
-              <li>本次授权仅限 Incident #441 范围内的审计操作</li>
-              <li>你的初始权限等级为 <strong>L1 — 只读审计</strong></li>
-              <li>如需提升权限，请通过系统内合规流程申请</li>
-              <li>所有操作将被记录至审计追踪日志</li>
+              <li>验证码前缀由 <strong>2 个字母</strong>组成：取自"<strong>N</strong>ight <strong>A</strong>udit"的首字母</li>
+              <li>前缀与数字之间使用 <strong>短横线 (-)</strong> 连接</li>
+              <li>数字部分是本次事故的编号（4位数，含前导零）</li>
             </ul>
             <p class="email-sign">—— Helpline Zero 自动化运维系统</p>
+          </div>
+        </div>
+
+        <!-- 邮件2：同事提示 -->
+        <div class="email-item" style="margin-top:12px;">
+          <div class="email-meta">
+            <span class="email-from">赵锐 (zhaorui@hlz.com)</span>
+            <span class="email-time">02:44 AM</span>
+          </div>
+          <div class="email-subject">验证码格式</div>
+          <div class="email-body">
+            <p>嘿，系统邮件的验证码是不是又没显示？服务器最近老出问题。</p>
+            <p>格式是这样的：<code style="background:var(--bg-input);padding:2px 6px;border-radius:3px;">XX-YYYY</code>，XX 是两个大写字母前缀，YYYY 是 Incident 后面的编号数字。</p>
+            <p>往上看系统公告里有事故编号，公告里 # 后面的数字就是。快登录吧，情况不太好。</p>
+            <p class="email-sign">—— 赵锐</p>
           </div>
         </div>
       </div>
@@ -140,16 +152,8 @@
       }
     });
 
-    // 揭示验证码
-    function revealCode() {
-      const blurred = document.getElementById('code-blurred');
-      blurred.style.filter = 'none';
-      blurred.style.userSelect = 'auto';
-      // 隐藏按钮
-      const btn = blurred.parentElement.querySelector('button');
-      if (btn) btn.style.display = 'none';
-      if (typeof Interactions !== 'undefined') Interactions.notify('验证码已解锁', 'info');
-    }
+    // 登录尝试次数（用于渐进提示）
+    let loginAttempts = 0;
 
     function attemptLogin() {
       const name = document.getElementById('player-name').value.trim();
@@ -177,12 +181,22 @@
           Navigation.goTo(2);
         }, 1200);
       } else if (code === '') {
-        hint.textContent = '请输入验证码';
+        hint.textContent = '请根据邮件提示拼合验证码';
         hint.style.color = 'var(--accent-orange)';
       } else {
+        loginAttempts++;
         input.classList.add('input-error');
-        hint.textContent = '验证码错误，请仔细查阅邮件';
-        hint.style.color = 'var(--accent-red)';
+        // 渐进提示：每次错误给出更多线索
+        if (loginAttempts === 1) {
+          hint.textContent = '验证码错误。提示：仔细阅读两封邮件和顶部公告。';
+          hint.style.color = 'var(--accent-red)';
+        } else if (loginAttempts === 2) {
+          hint.textContent = '再想想：前缀 = "Night Audit"的首字母，数字 = 事故编号';
+          hint.style.color = 'var(--accent-red)';
+        } else if (loginAttempts >= 3) {
+          hint.innerHTML = '格式：<code style="background:var(--bg-input);padding:1px 4px;border-radius:3px;">XX-YYYY</code>，XX=系统名称首字母，YYYY=公告中 # 后面的数字（补前导零到4位）';
+          hint.style.color = 'var(--accent-orange)';
+        }
         Interactions.notify('验证码错误', 'error');
       }
     }
