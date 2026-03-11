@@ -19,7 +19,7 @@
 
     <div class="alert alert-warning fade-in">
       <span class="alert-icon">🔒</span>
-      <div>快照中包含 4 条内部加密通讯。部分通讯使用了简易替换加密，密钥可能与事故相关信息有关。</div>
+      <div>快照中包含 4 条内部加密通讯。部分通讯使用了不同的加密方式，你需要使用内置解码工具逐一破解。</div>
     </div>
 
     <div class="comms-layout">
@@ -27,9 +27,7 @@
       <div class="comms-sidebar">
         <div class="card fade-in">
           <div class="card-title" style="margin-bottom:12px;">📨 截获的通讯</div>
-          <div class="comms-list" id="comms-list">
-            <!-- 动态生成 -->
-          </div>
+          <div class="comms-list" id="comms-list"></div>
         </div>
       </div>
 
@@ -62,6 +60,9 @@
   <script src="js/navigation.js"></script>
   <script src="js/interactions.js"></script>
   <script>
+    /* ============================
+       通讯数据
+       ============================ */
     const commsData = [
       {
         id: 'comm-1',
@@ -85,8 +86,8 @@
         time: '22:52',
         subject: 'RE: 关于明天的 "维护"',
         encrypted: true,
+        encType: 'base64',
         cipher: 'U3RvcCB3b3JyeWluZy4gVGhlIEFYMTMgcmVjYWxsIHJlcG9ydCBoYXMgYmVlbiBidXJpZWQgZm9yIDMgd2Vla3MuIElmIHRoZSBhdHRhY2htZW50cyBkaXNhcHBlYXIsIG5vIG9uZSBjYW4gcHJvdmUgdGhlIGxvY2sgdnVsbmVyYWJpbGl0eSBleGlzdHMu',
-        decryptHint: '这段信息使用了 Base64 编码。尝试在下方输入解码后的关键词。',
         decryptKey: 'AX13',
         decryptKeyHint: '解码后的文本提到了一个产品批次号，输入它来确认解密',
         decryptedBody: `<p>别担心。AX13 的召回报告已经压了 3 周了。</p>
@@ -103,11 +104,11 @@
         time: '23:15',
         subject: 'AX13 处置方案',
         encrypted: true,
-        cipher: 'Cgrhvorw fvghngvba. V\'yy znxr fher gur dhnyvgl ercbeg trgf "hcqngrq" ol Zbaqnl. Gur xrl ceboyrz vf gur tvey jub xrrcf svyvat pbzcynvagf - Kh Muvjrv. Vs fur tbrf choyvp, jr\'er nyy qbar.',
-        decryptHint: '这段信息使用了 ROT13 替换加密。密钥是字母表移位 13 位。输入被提到的受害者的名字拼音来确认解密。',
+        encType: 'rot13',
+        cipher: 'Pbagebyyrq fvghngvba. V\'yy znxr fher gur dhnyvgl ercbeg trgf "hcqngrq" ol Zbaqnl. Gur xrl ceboyrz vf gur tvey jub xrrcf svyvat pbzcynvagf - Kh Muvjrv. Vs fur tbrf choyvp, jr\'er nyy qbar.',
         decryptKey: 'xuzhiwei',
         decryptKeyHint: '解密后提到了一个一直在投诉的用户——输入她的名字拼音',
-        decryptedBody: `<p>收到指示。我会确保质检报告在周一前被"更新"。</p>
+        decryptedBody: `<p>局面可控。我会确保质检报告在周一前被"更新"。</p>
 <p>关键问题是那个一直在投诉的女生 —— <span class="clue-highlight">许知微</span>。如果她公开发声，我们就全完了。</p>
 <p>她之前的工单附件里有走廊监控截图和门锁日志。这些东西如果流出去，可以直接证明 AX13 批次存在系统性漏洞。</p>
 <p>所以今晚的清理<strong>必须</strong>彻底。</p>
@@ -121,8 +122,8 @@
         time: '01:28',
         subject: '[紧急] 计划变更',
         encrypted: true,
+        encType: 'hex',
         cipher: '48 5A 2D 37 20 69 73 20 73 74 69 6C 6C 20 72 75 6E 6E 69 6E 67 2E 20 53 6F 6D 65 6F 6E 65 20 73 65 6E 74 20 61 20 73 74 6F 70 20 63 6F 6D 6D 61 6E 64 2E 20 54 72 75 73 74 48 6F 6C 64 20 6F 76 65 72 72 69 64 65 20 77 6F 72 6B 65 64 2E 20 42 75 74 20 77 65 20 6E 65 65 64 20 74 6F 20 63 6C 65 61 6E 20 74 68 65 20 61 75 64 69 74 20 6C 6F 67 73 20 62 65 66 6F 72 65 20 6D 6F 72 6E 69 6E 67 2E 20 55 73 65 20 61 64 6D 69 6E 2D 61 70 69 2E 20 53 69 67 6E 65 64 3A 20 4C 69 61 6E 67 20 5A 68 69 79 75 61 6E',
-        decryptHint: '这段信息使用了十六进制 (Hex) 编码。每两位代表一个 ASCII 字符。输入签名者的姓名拼音来确认解密。',
         decryptKey: 'liangzhiyuan',
         decryptKeyHint: '末尾的签名揭示了幕后主导者——输入这个人的名字拼音',
         decryptedBody: `<p>HZ-7 还在运行。有人发了停止指令。TrustHold 覆盖生效了。</p>
@@ -142,13 +143,16 @@
 
     let decryptedCount = 0;
 
+    /* ============================
+       通讯列表渲染
+       ============================ */
     function renderCommsList() {
       const list = document.getElementById('comms-list');
       list.innerHTML = commsData.map((comm, i) => {
         const isLocked = i > 0 && !NightAudit.get(`comm_${i-1}_done`);
         const isDone = NightAudit.get(`comm_${comm.id}_done`);
         return `
-          <div class="comms-item ${isLocked ? 'locked' : ''} ${isDone ? '' : ''}" 
+          <div class="comms-item ${isLocked ? 'locked' : ''}" 
                data-index="${i}" 
                onclick="${isLocked ? '' : `viewComm(${i})`}">
             <div class="comms-item-header">
@@ -162,68 +166,384 @@
       }).join('');
     }
 
+    /* ============================
+       查看通讯
+       ============================ */
     function viewComm(index) {
       const comm = commsData[index];
       const viewer = document.getElementById('comms-viewer');
 
-      // 高亮当前选中
       document.querySelectorAll('.comms-item').forEach(el => el.classList.remove('active'));
-      document.querySelector(`.comms-item[data-index="${index}"]`).classList.add('active');
+      document.querySelector(`.comms-item[data-index="${index}"]`)?.classList.add('active');
 
       if (!comm.encrypted) {
-        // 明文通讯
-        viewer.innerHTML = `
-          <div class="comms-meta">
-            <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
-            <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
-            <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
-            <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
-          </div>
-          <div class="comms-body">${comm.body}</div>
-        `;
+        viewer.innerHTML = renderMeta(comm) + `<div class="comms-body">${comm.body}</div>`;
         markCommDone(comm, index);
       } else {
-        // 加密通讯
         const isDone = NightAudit.get(`comm_${comm.id}_done`);
         if (isDone) {
           showDecrypted(comm, index);
         } else {
-          viewer.innerHTML = `
-            <div class="comms-meta">
-              <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
-              <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
-              <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
-              <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
-            </div>
-            <div class="comms-encrypted">
-              <div style="font-size:12px;color:var(--accent-orange);margin-bottom:8px;">🔒 加密内容</div>
-              <div class="encrypted-text">${comm.cipher}</div>
-              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">${comm.decryptHint}</div>
-              <div style="font-size:12px;color:var(--accent-gold);margin-bottom:8px;">💡 ${comm.decryptKeyHint}</div>
-              <div class="decrypt-input-row">
-                <input type="text" class="input-field input-mono" id="decrypt-input-${index}" placeholder="输入解密密钥">
-                <button class="btn-primary" onclick="tryDecrypt(${index})">解密</button>
-              </div>
-              <div class="form-hint" id="decrypt-hint-${index}" style="margin-top:6px;"></div>
-            </div>
-          `;
-          // 回车解密
-          setTimeout(() => {
-            const input = document.getElementById(`decrypt-input-${index}`);
-            if (input) {
-              input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') tryDecrypt(index);
-              });
-              input.focus();
-            }
-          }, 100);
+          switch (comm.encType) {
+            case 'base64': renderBase64Decoder(comm, index); break;
+            case 'rot13':  renderROT13Decoder(comm, index);  break;
+            case 'hex':    renderHexDecoder(comm, index);     break;
+          }
         }
       }
     }
 
+    function renderMeta(comm) {
+      return `<div class="comms-meta">
+        <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
+        <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
+        <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
+        <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
+      </div>`;
+    }
+
+    /* ============================
+       ★ Base64 交互解码器
+       把密文分成几段，玩家逐段点击解码
+       ============================ */
+    function renderBase64Decoder(comm, index) {
+      const viewer = document.getElementById('comms-viewer');
+      // 将 base64 分成多段
+      const cipher = comm.cipher;
+      const chunkSize = 20;
+      const chunks = [];
+      for (let i = 0; i < cipher.length; i += chunkSize) {
+        chunks.push(cipher.slice(i, i + chunkSize));
+      }
+
+      viewer.innerHTML = renderMeta(comm) + `
+        <div class="comms-encrypted">
+          <div class="decoder-header">
+            <span class="decoder-type-badge base64">BASE64</span>
+            <span class="decoder-title">Base64 分段解码器</span>
+          </div>
+          <div class="decoder-explain">
+            <p>📖 <strong>Base64</strong> 是一种将二进制数据转换为文本的编码方式。它用 A-Z、a-z、0-9、+、/ 共 64 个字符来表示数据。</p>
+            <p>点击下方的密文块，逐段解码还原原文。</p>
+          </div>
+          <div class="b64-chunks" id="b64-chunks">
+            ${chunks.map((chunk, i) => `
+              <span class="b64-chunk" data-idx="${i}" onclick="decodeB64Chunk(${i})">${chunk}</span>
+            `).join('')}
+          </div>
+          <div class="decoder-arrow">↓ 解码结果</div>
+          <div class="b64-result" id="b64-result">
+            <span class="b64-placeholder">点击上方密文块开始解码...</span>
+          </div>
+          <div class="decoder-progress">
+            <div class="decoder-progress-bar" id="b64-progress" style="width:0%"></div>
+          </div>
+          <div class="decoder-progress-text" id="b64-progress-text">已解码：0 / ${chunks.length} 段</div>
+        </div>
+        <div id="b64-confirm" style="display:none;margin-top:16px;">
+          <div class="decoder-confirm-box">
+            <div style="font-size:12px;color:var(--accent-gold);margin-bottom:8px;">💡 ${comm.decryptKeyHint}</div>
+            <div class="decrypt-input-row">
+              <input type="text" class="input-field input-mono" id="decrypt-input-${index}" placeholder="输入关键词确认">
+              <button class="btn-primary" onclick="tryDecrypt(${index})">确认</button>
+            </div>
+            <div class="form-hint" id="decrypt-hint-${index}" style="margin-top:6px;"></div>
+          </div>
+        </div>
+      `;
+
+      // 存储解码状态
+      window._b64State = { chunks, decoded: new Set(), fullText: atob(cipher) };
+    }
+
+    function decodeB64Chunk(idx) {
+      const state = window._b64State;
+      if (state.decoded.has(idx)) return;
+      state.decoded.add(idx);
+
+      // 标记已解码
+      const chunkEl = document.querySelector(`.b64-chunk[data-idx="${idx}"]`);
+      if (chunkEl) {
+        chunkEl.classList.add('decoded');
+        chunkEl.textContent = '✓ ' + chunkEl.textContent;
+      }
+
+      // 计算当前已解码位置对应的明文
+      const fullText = state.fullText;
+      const totalChunks = state.chunks.length;
+      const progress = state.decoded.size / totalChunks;
+
+      // 显示对应比例的明文
+      const revealLen = Math.ceil(fullText.length * (state.decoded.size / totalChunks));
+      const revealed = fullText.substring(0, revealLen);
+      const resultEl = document.getElementById('b64-result');
+      resultEl.innerHTML = `<span class="b64-decoded-text">${revealed}</span><span class="b64-cursor">█</span>`;
+
+      // 更新进度
+      document.getElementById('b64-progress').style.width = (progress * 100) + '%';
+      document.getElementById('b64-progress-text').textContent = `已解码：${state.decoded.size} / ${totalChunks} 段`;
+
+      // 全部解码完
+      if (state.decoded.size >= totalChunks) {
+        resultEl.innerHTML = `<span class="b64-decoded-text">${fullText}</span>`;
+        document.getElementById('b64-confirm').style.display = 'block';
+        document.getElementById('b64-confirm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        Interactions.notify('🔓 Base64 解码完成！仔细阅读内容，找到关键词', 'success', 3000);
+
+        // 自动聚焦
+        const idx2 = document.querySelector('[id^="decrypt-input-"]');
+        if (idx2) setTimeout(() => { idx2.focus(); }, 300);
+      }
+    }
+
+    /* ============================
+       ★ ROT13 字母转盘解码器
+       拖动滑块选择偏移量，实时预览
+       ============================ */
+    function renderROT13Decoder(comm, index) {
+      const viewer = document.getElementById('comms-viewer');
+
+      viewer.innerHTML = renderMeta(comm) + `
+        <div class="comms-encrypted">
+          <div class="decoder-header">
+            <span class="decoder-type-badge rot13">ROT / 凯撒</span>
+            <span class="decoder-title">凯撒密码转盘解码器</span>
+          </div>
+          <div class="decoder-explain">
+            <p>📖 <strong>凯撒密码</strong> 是最古老的加密方式之一：将每个字母按固定位数移位。ROT13 即移动 13 位。</p>
+            <p>拖动下方转盘，调整偏移量，当你看到可读文本时就找到了正确密钥！</p>
+          </div>
+
+          <div class="rot-wheel-section">
+            <div class="rot-alphabet-display">
+              <div class="rot-row">
+                <span class="rot-label">原文</span>
+                <div class="rot-letters" id="rot-original">
+                  ${Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map(c => `<span class="rot-letter">${c}</span>`).join('')}
+                </div>
+              </div>
+              <div class="rot-arrow-row">
+                ${Array.from({length:26}, () => '<span class="rot-arrow-char">↓</span>').join('')}
+              </div>
+              <div class="rot-row">
+                <span class="rot-label">密文</span>
+                <div class="rot-letters" id="rot-shifted">
+                  ${Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map(c => `<span class="rot-letter">${c}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+
+            <div class="rot-slider-section">
+              <label class="rot-slider-label">偏移量：<span id="rot-offset-val" class="rot-offset-display">0</span></label>
+              <input type="range" class="rot-slider" id="rot-slider" min="0" max="25" value="0" oninput="updateROT(this.value)">
+              <div class="rot-slider-ticks">
+                <span>0</span><span>5</span><span>10</span><span>13</span><span>15</span><span>20</span><span>25</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="rot-cipher-section">
+            <div class="rot-section-label">密文：</div>
+            <div class="rot-cipher-text">${comm.cipher}</div>
+          </div>
+
+          <div class="decoder-arrow">↓ 解密预览</div>
+
+          <div class="rot-preview-section">
+            <div class="rot-section-label">解密结果：</div>
+            <div class="rot-preview-text" id="rot-preview">${comm.cipher}</div>
+          </div>
+
+          <div class="rot-hint-box" id="rot-hint-box" style="display:none;">
+            <span class="rot-hint-icon">💡</span>
+            <span>文本变得可读了！这就是正确的偏移量。</span>
+          </div>
+        </div>
+
+        <div id="rot-confirm" style="display:none;margin-top:16px;">
+          <div class="decoder-confirm-box">
+            <div style="font-size:12px;color:var(--accent-gold);margin-bottom:8px;">💡 ${comm.decryptKeyHint}</div>
+            <div class="decrypt-input-row">
+              <input type="text" class="input-field input-mono" id="decrypt-input-${index}" placeholder="输入关键词确认">
+              <button class="btn-primary" onclick="tryDecrypt(${index})">确认</button>
+            </div>
+            <div class="form-hint" id="decrypt-hint-${index}" style="margin-top:6px;"></div>
+          </div>
+        </div>
+      `;
+
+      window._rotState = { cipher: comm.cipher, solved: false };
+    }
+
+    function caesarShift(text, shift) {
+      return text.replace(/[a-zA-Z]/g, c => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(((c.charCodeAt(0) - base + shift) % 26) + base);
+      });
+    }
+
+    function updateROT(val) {
+      const shift = parseInt(val);
+      document.getElementById('rot-offset-val').textContent = shift;
+
+      // 更新字母表映射显示
+      const shiftedRow = document.getElementById('rot-shifted');
+      const letters = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      shiftedRow.innerHTML = letters.map((c, i) => {
+        const shifted = letters[(i + shift) % 26];
+        const isHighlight = shift === 13;
+        return `<span class="rot-letter ${isHighlight ? 'rot-correct' : ''}">${shifted}</span>`;
+      }).join('');
+
+      // 解密预览
+      const decrypted = caesarShift(window._rotState.cipher, shift);
+      document.getElementById('rot-preview').textContent = decrypted;
+
+      // 检测 ROT13
+      const hintBox = document.getElementById('rot-hint-box');
+      const confirmBox = document.getElementById('rot-confirm');
+      if (shift === 13 && !window._rotState.solved) {
+        window._rotState.solved = true;
+        hintBox.style.display = 'flex';
+        confirmBox.style.display = 'block';
+        document.getElementById('rot-preview').classList.add('rot-readable');
+        Interactions.notify('🔓 找到了！偏移量 13 就是 ROT13', 'success', 3000);
+        setTimeout(() => {
+          confirmBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const inp = document.querySelector('[id^="decrypt-input-"]');
+          if (inp) inp.focus();
+        }, 300);
+      } else if (shift !== 13) {
+        document.getElementById('rot-preview').classList.remove('rot-readable');
+        if (!window._rotState.solved) hintBox.style.display = 'none';
+      }
+    }
+
+    /* ============================
+       ★ Hex 逐字节交互解码器
+       点击十六进制对，逐个显示对应的字符
+       ============================ */
+    function renderHexDecoder(comm, index) {
+      const viewer = document.getElementById('comms-viewer');
+      const hexPairs = comm.cipher.trim().split(/\s+/);
+
+      viewer.innerHTML = renderMeta(comm) + `
+        <div class="comms-encrypted">
+          <div class="decoder-header">
+            <span class="decoder-type-badge hex">HEX</span>
+            <span class="decoder-title">十六进制逐字节解码器</span>
+          </div>
+          <div class="decoder-explain">
+            <p>📖 <strong>十六进制编码</strong> 用两位 Hex 数字（00-FF）表示一个字节。每个字节对应一个 ASCII 字符。</p>
+            <p>点击下方的十六进制数对，逐个将它们转换为字符。也可以点击「全部解码」一次性完成。</p>
+          </div>
+
+          <div class="hex-grid" id="hex-grid">
+            ${hexPairs.map((pair, i) => `
+              <div class="hex-pair" data-idx="${i}" onclick="decodeHexPair(${i})">
+                <div class="hex-value">${pair}</div>
+                <div class="hex-char" id="hex-char-${i}">?</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="text-align:center;margin:12px 0;">
+            <button class="btn-secondary hex-auto-btn" onclick="autoDecodeHex()">⚡ 全部解码</button>
+          </div>
+
+          <div class="decoder-arrow">↓ 解码结果</div>
+
+          <div class="hex-result-section">
+            <div class="hex-result" id="hex-result">
+              <span class="b64-placeholder">点击上方的十六进制数对开始解码...</span>
+            </div>
+          </div>
+
+          <div class="decoder-progress">
+            <div class="decoder-progress-bar" id="hex-progress" style="width:0%"></div>
+          </div>
+          <div class="decoder-progress-text" id="hex-progress-text">已解码：0 / ${hexPairs.length} 字节</div>
+        </div>
+
+        <div id="hex-confirm" style="display:none;margin-top:16px;">
+          <div class="decoder-confirm-box">
+            <div style="font-size:12px;color:var(--accent-gold);margin-bottom:8px;">💡 ${comm.decryptKeyHint}</div>
+            <div class="decrypt-input-row">
+              <input type="text" class="input-field input-mono" id="decrypt-input-${index}" placeholder="输入关键词确认">
+              <button class="btn-primary" onclick="tryDecrypt(${index})">确认</button>
+            </div>
+            <div class="form-hint" id="decrypt-hint-${index}" style="margin-top:6px;"></div>
+          </div>
+        </div>
+      `;
+
+      window._hexState = {
+        pairs: hexPairs,
+        decoded: new Set(),
+        chars: hexPairs.map(h => String.fromCharCode(parseInt(h, 16)))
+      };
+    }
+
+    function decodeHexPair(idx) {
+      const state = window._hexState;
+      if (state.decoded.has(idx)) return;
+      state.decoded.add(idx);
+
+      const pairEl = document.querySelector(`.hex-pair[data-idx="${idx}"]`);
+      const charEl = document.getElementById(`hex-char-${idx}`);
+      if (pairEl && charEl) {
+        pairEl.classList.add('decoded');
+        const ch = state.chars[idx];
+        charEl.textContent = ch === ' ' ? '␣' : ch;
+        charEl.classList.add('revealed');
+      }
+
+      updateHexResult();
+    }
+
+    function autoDecodeHex() {
+      const state = window._hexState;
+      let delay = 0;
+      state.pairs.forEach((_, i) => {
+        if (!state.decoded.has(i)) {
+          setTimeout(() => decodeHexPair(i), delay);
+          delay += 30;
+        }
+      });
+    }
+
+    function updateHexResult() {
+      const state = window._hexState;
+      const progress = state.decoded.size / state.pairs.length;
+
+      // 构建当前已解码的文本
+      let result = '';
+      for (let i = 0; i < state.pairs.length; i++) {
+        result += state.decoded.has(i) ? state.chars[i] : '·';
+      }
+
+      document.getElementById('hex-result').innerHTML = `<span class="hex-decoded-text">${escapeHtml(result)}</span>`;
+      document.getElementById('hex-progress').style.width = (progress * 100) + '%';
+      document.getElementById('hex-progress-text').textContent = `已解码：${state.decoded.size} / ${state.pairs.length} 字节`;
+
+      if (state.decoded.size >= state.pairs.length) {
+        document.getElementById('hex-confirm').style.display = 'block';
+        document.getElementById('hex-confirm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        Interactions.notify('🔓 Hex 解码完成！仔细阅读签名部分', 'success', 3000);
+        setTimeout(() => {
+          const inp = document.querySelector('[id^="decrypt-input-"]');
+          if (inp) inp.focus();
+        }, 300);
+      }
+    }
+
+    /* ============================
+       通用确认解密
+       ============================ */
     function tryDecrypt(index) {
       const comm = commsData[index];
-      const input = document.getElementById(`decrypt-input-${index}`).value.trim().toLowerCase();
+      const inputEl = document.getElementById(`decrypt-input-${index}`);
+      const input = inputEl.value.trim().toLowerCase();
       const hint = document.getElementById(`decrypt-hint-${index}`);
 
       if (input === comm.decryptKey.toLowerCase()) {
@@ -231,25 +551,20 @@
         markCommDone(comm, index);
         Interactions.notify('🔓 通讯解密成功！', 'success', 3000);
       } else if (input === '') {
-        hint.textContent = '请输入解密密钥';
+        hint.textContent = '请输入关键词';
         hint.style.color = 'var(--accent-orange)';
       } else {
-        hint.textContent = '密钥错误。仔细阅读提示，答案就在解密后的内容中。';
+        hint.textContent = '不对，仔细阅读解码后的内容再试试。';
         hint.style.color = 'var(--accent-red)';
-        Interactions.notify('解密失败', 'error');
+        Interactions.notify('关键词不对', 'error');
       }
     }
 
     function showDecrypted(comm, index) {
       const viewer = document.getElementById('comms-viewer');
       viewer.innerHTML = `
-        <div class="comms-meta">
-          <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
-          <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
-          <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
-          <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
-          <div class="comms-meta-row"><span class="comms-meta-label">状态</span><span class="tag tag-green">已解密</span></div>
-        </div>
+        ${renderMeta(comm)}
+        <div style="margin-bottom:8px;"><span class="comms-meta-label">状态</span> <span class="tag tag-green">已解密</span></div>
         <div class="decrypted-content">
           <div class="decrypted-header">✅ 解密内容</div>
           <div class="comms-body">${comm.decryptedBody}</div>
@@ -260,9 +575,7 @@
     function markCommDone(comm, index) {
       NightAudit.set(`comm_${comm.id}_done`, true);
       NightAudit.set(`comm_${index}_done`, true);
-      if (comm.clue) {
-        NightAudit.addClue(comm.clue.id, comm.clue);
-      }
+      if (comm.clue) NightAudit.addClue(comm.clue.id, comm.clue);
       renderCommsList();
       checkAllDone();
     }
@@ -282,9 +595,16 @@
       setTimeout(() => Navigation.goTo(8), 800);
     }
 
-    renderCommsList();
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
 
-    // 首次进入自动查看第一条
+    /* ============================
+       初始化
+       ============================ */
+    renderCommsList();
     if (!NightAudit.get('comm_comm-1_done')) {
       setTimeout(() => viewComm(0), 600);
     }
