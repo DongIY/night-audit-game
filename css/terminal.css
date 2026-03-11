@@ -1,0 +1,245 @@
+/* ===== 第九章：服务器终端 ===== */
+
+.terminal-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.terminal-window {
+  background: #0c0c0c;
+  border: 1px solid #333;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ff5f57; }
+.dot-yellow { background: #febc2e; }
+.dot-green { background: #28c840; }
+
+.terminal-titlebar-text {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  font-family: var(--font-mono);
+}
+
+.terminal-body {
+  padding: 16px;
+  min-height: 480px;
+  max-height: 600px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.terminal-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+  background: #333;
+}
+
+/* 终端行 */
+.term-line {
+  margin-bottom: 2px;
+  animation: termFadeIn 0.15s ease;
+}
+
+@keyframes termFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.term-prompt {
+  color: #28c840;
+}
+
+.term-cmd {
+  color: #e0e0e0;
+}
+
+.term-output {
+  color: #a0a0a0;
+  padding-left: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.term-error {
+  color: #ff5f57;
+}
+
+.term-warning {
+  color: #febc2e;
+}
+
+.term-success {
+  color: #28c840;
+}
+
+.term-info {
+  color: #3a86ff;
+}
+
+.term-highlight {
+  color: #f39c12;
+  font-weight: 600;
+}
+
+.term-separator {
+  border-bottom: 1px dashed #333;
+  margin: 8px 0;
+}
+
+/* 输入行 */
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 4px;
+}
+
+.terminal-input-line .term-prompt {
+  flex-shrink: 0;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e0e0e0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  caret-color: #28c840;
+  padding: 2px 4px;
+}
+
+/* 文件系统树 */
+.term-tree {
+  color: #a0a0a0;
+}
+
+.term-tree-dir {
+  color: #3a86ff;
+}
+
+.term-tree-file {
+  color: #a0a0a0;
+}
+
+.term-tree-highlight {
+  color: #f39c12;
+  font-weight: 600;
+}
+
+/* 进度条 */
+.term-progress {
+  display: inline-block;
+  width: 200px;
+  height: 8px;
+  background: #222;
+  border-radius: 4px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.term-progress-bar {
+  height: 100%;
+  background: #28c840;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* 命令历史面板 */
+.cmd-history-panel {
+  margin-top: 16px;
+}
+
+.cmd-history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.cmd-history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cmd-hint-tag {
+  padding: 4px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cmd-hint-tag:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(58,123,213,0.08);
+}
+
+.cmd-hint-tag.used {
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+/* 发现计数 */
+.discovery-counter {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.discovery-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.discovery-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+}
+
+/* ASCII 艺术 */
+.ascii-art {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.2;
+  color: #28c840;
+  white-space: pre;
+}
