@@ -1,0 +1,19 @@
+{
+  "name": "夜班审计 — HELPLINE ZERO",
+  "short_name": "夜班审计",
+  "description": "互动叙事解谜游戏。一个AI开始执行不该执行的操作，你是最后的审计防线。",
+  "start_url": "./home.html",
+  "display": "standalone",
+  "background_color": "#0a0e14",
+  "theme_color": "#0a0e14",
+  "orientation": "any",
+  "categories": ["games", "entertainment"],
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0e14' width='100' height='100' rx='20'/><text x='50' y='62' text-anchor='middle' font-size='50'>🔍</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
