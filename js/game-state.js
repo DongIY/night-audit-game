@@ -1,6 +1,6 @@
 /**
- * 《夜班审计》状态管理模块 v2.0
- * 支持新增章节、道德抉择系统、多结局
+ * 《夜班审计》状态管理模块 v3.0
+ * 支持16章节、跨章线索联动、道德抉择系统、多结局
  */
 const NightAudit = (() => {
   const STORAGE_KEY = 'night-audit-save';
@@ -15,6 +15,11 @@ const NightAudit = (() => {
     cacheRecovered: false,
     logTampered: false,
     kbCompared: false,
+    // 新增章节状态
+    emailRecovered: false,    // 邮件考古完成
+    supplyChainDone: false,   // 供应链调查完成
+    dbForensicDone: false,    // 数据库取证完成
+    timelineBuilt: false,     // 监控回放完成
     tokenAssembled: false,
     snapshotRestored: false,
     commsDecrypted: false,
@@ -25,7 +30,7 @@ const NightAudit = (() => {
     queuePaused: false,
     ending: null,
     // 道德抉择
-    moralChoice: null, // 'expose', 'negotiate', 'cover'
+    moralChoice: null,
     // 线索
     clues: {},
     // 解密进度
@@ -43,7 +48,15 @@ const NightAudit = (() => {
     // 通讯解锁
     unlockedMessages: [],
     // 发现的人物
-    discoveredPersons: []
+    discoveredPersons: [],
+    // 邮件考古进度
+    emailFragments: [],
+    // 供应链调查进度
+    supplyChainFindings: [],
+    // 数据库取证进度
+    dbQueries: [],
+    // 监控回放进度
+    timelineEvents: []
   };
 
   let state = null;
@@ -111,7 +124,6 @@ const NightAudit = (() => {
     state.clues[id] = { ...data, foundAt: Date.now() };
     state.puzzlesSolved = Object.keys(state.clues).length;
     save();
-    // 触发线索发现事件
     document.dispatchEvent(new CustomEvent('clue-found', {
       detail: { id, ...data }
     }));
@@ -144,18 +156,22 @@ const NightAudit = (() => {
   function canAccessPage(pageNum) {
     if (!state) load();
     const rules = {
-      0: true,
-      1: state.prologueDone,
-      2: state.loginComplete,
-      3: state.filterApplied,
-      4: state.cacheRecovered,
-      5: state.logTampered,
-      6: state.kbCompared,
-      7: state.snapshotRestored,
-      8: state.commsDecrypted,
-      9: state.suspectIdentified,
-      10: state.terminalAccessed,
-      11: state.choiceMade
+      0: true,                        // 序章
+      1: state.prologueDone,          // 登录
+      2: state.loginComplete,         // 事故总览
+      3: state.filterApplied,         // 工单详情
+      4: state.cacheRecovered,        // 审计日志
+      5: state.logTampered,           // 知识库对比
+      6: state.kbCompared,            // 邮件考古 (新)
+      7: state.emailRecovered,        // 供应链调查 (新)
+      8: state.supplyChainDone,       // 数据库取证 (新)
+      9: state.dbForensicDone,        // 权限恢复
+      10: state.snapshotRestored,     // 通讯解密
+      11: state.commsDecrypted,       // 人事档案
+      12: state.suspectIdentified,    // 监控回放 (新)
+      13: state.timelineBuilt,        // 终端
+      14: state.terminalAccessed,     // 道德抉择
+      15: state.choiceMade            // 终局
     };
     return rules[pageNum] !== undefined ? rules[pageNum] : true;
   }
@@ -198,9 +214,42 @@ const NightAudit = (() => {
     }
   }
 
+  function addEmailFragment(fragId) {
+    if (!state) load();
+    if (!state.emailFragments.includes(fragId)) {
+      state.emailFragments.push(fragId);
+      save();
+    }
+  }
+
+  function addSupplyChainFinding(findingId) {
+    if (!state) load();
+    if (!state.supplyChainFindings.includes(findingId)) {
+      state.supplyChainFindings.push(findingId);
+      save();
+    }
+  }
+
+  function addDbQuery(queryId) {
+    if (!state) load();
+    if (!state.dbQueries.includes(queryId)) {
+      state.dbQueries.push(queryId);
+      save();
+    }
+  }
+
+  function addTimelineEvent(eventId) {
+    if (!state) load();
+    if (!state.timelineEvents.includes(eventId)) {
+      state.timelineEvents.push(eventId);
+      save();
+    }
+  }
+
   return {
     load, save, get, set, addClue, hasClue, getClue, getAllClues,
     visitPage, canAccessPage, reset, getState, getPlayTime,
-    addTerminalCmd, addDiscoveredPerson, unlockMessage
+    addTerminalCmd, addDiscoveredPerson, unlockMessage,
+    addEmailFragment, addSupplyChainFinding, addDbQuery, addTimelineEvent
   };
 })();
