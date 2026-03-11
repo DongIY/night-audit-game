@@ -1,0 +1,281 @@
+/* ===== P7 终局止损 & 结局 ===== */
+
+/* 倒计时 */
+.countdown-bar {
+  position: fixed;
+  top: 48px;
+  left: 0; right: 0;
+  height: 40px;
+  background: rgba(231,76,60,0.1);
+  border-bottom: 1px solid rgba(231,76,60,0.3);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.countdown-timer {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-red);
+}
+
+.countdown-label {
+  color: #f5a8a2;
+  font-size: 13px;
+}
+
+.countdown-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent-red);
+  transition: width 1s linear;
+}
+
+/* 终局面板 */
+.finale-content {
+  padding-top: 112px !important;
+}
+
+.finale-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* 执行队列 */
+.queue-panel {
+  padding: 24px !important;
+}
+
+.queue-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--accent-red);
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  font-size: 13px;
+  transition: all var(--transition-fast);
+}
+
+.queue-item.queue-active {
+  border-color: var(--accent-red);
+  animation: queuePulse 1.5s ease infinite;
+}
+
+.queue-item.queue-paused {
+  border-color: var(--accent-green);
+  opacity: 0.6;
+}
+
+@keyframes queuePulse {
+  0%, 100% { background: var(--bg-input); }
+  50% { background: rgba(231,76,60,0.08); }
+}
+
+.queue-status {
+  font-size: 16px;
+}
+
+.queue-action {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  flex: 1;
+}
+
+.queue-target {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.pause-section {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.pause-code-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 证据分发 */
+.evidence-panel {
+  padding: 24px !important;
+}
+
+.evidence-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  transition: all var(--transition-fast);
+}
+
+.channel-item.channel-sent {
+  border-color: var(--accent-green);
+  background: rgba(39,174,96,0.05);
+}
+
+.channel-icon {
+  font-size: 24px;
+}
+
+.channel-info {
+  flex: 1;
+}
+
+.channel-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.channel-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.channel-btn {
+  min-width: 80px;
+}
+
+/* 最终确认 */
+.final-action {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.final-action-btn {
+  font-size: 18px !important;
+  padding: 16px 36px !important;
+  animation: finalPulse 2s ease infinite;
+}
+
+@keyframes finalPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(39,174,96,0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(39,174,96,0); }
+}
+
+/* ===== 结局页 ===== */
+.ending-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 48px 24px;
+}
+
+.ending-card {
+  max-width: 700px;
+  text-align: center;
+  animation: fadeIn 1s ease;
+}
+
+.ending-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.ending-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.ending-title.title-success {
+  color: var(--accent-green);
+}
+
+.ending-title.title-failure {
+  color: var(--accent-red);
+}
+
+.ending-text {
+  font-size: 16px;
+  line-height: 2;
+  color: var(--text-primary);
+  margin-bottom: 32px;
+}
+
+.ending-text .highlight {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.ending-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.ending-stat {
+  text-align: center;
+}
+
+.ending-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.ending-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ending-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.ending-quote {
+  margin-top: 32px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-style: italic;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .finale-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .countdown-bar {
+    font-size: 12px;
+  }
+
+  .countdown-timer {
+    font-size: 18px;
+  }
+}
