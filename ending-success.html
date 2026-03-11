@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 真相大白</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/finale.css">
+  <style>
+    .ending-title.title-success { color: var(--accent-green); }
+    .ending-stat-value.stat-green { color: var(--accent-green); }
+    .ending-stat-value.stat-gold { color: var(--accent-gold); }
+
+    .ending-grade {
+      margin: 24px 0;
+    }
+    .grade-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .grade-value {
+      font-size: 48px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+    .grade-S { color: var(--accent-green); }
+    .grade-A { color: var(--accent-blue); }
+    .grade-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .clue-summary {
+      margin-top: 32px;
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .clue-summary-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-green);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .clue-summary-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .clue-summary-icon { flex-shrink: 0; font-size: 14px; }
+    .clue-summary-name { font-weight: 600; color: var(--text-primary); }
+    .clue-summary-src { color: var(--text-secondary); font-size: 11px; }
+
+    .epilogue-section {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: left;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .epilogue-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .epilogue-item {
+      padding: 10px 14px;
+      border-left: 3px solid var(--border);
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .epilogue-item strong { color: var(--text-primary); }
+    .epilogue-item.epilogue-good { border-color: var(--accent-green); }
+    .epilogue-item.epilogue-neutral { border-color: var(--accent-gold); }
+  </style>
+</head>
+<body>
+  <div class="ending-page">
+    <div class="ending-card">
+      <div class="ending-icon">✅</div>
+      <div class="ending-title title-success">真相大白</div>
+
+      <div class="ending-text" id="ending-text"></div>
+
+      <div class="ending-grade" id="ending-grade" style="opacity:0;">
+        <div class="grade-label">调查评级</div>
+        <div class="grade-value" id="grade-value">S</div>
+        <div class="grade-desc" id="grade-desc">完美调查 — 真相无可辩驳</div>
+      </div>
+
+      <div class="ending-stats" id="ending-stats" style="opacity:0;">
+        <div class="ending-stat">
+          <div class="ending-stat-value stat-green" id="stat-clues">—</div>
+          <div class="ending-stat-label">收集线索</div>
+        </div>
+        <div class="ending-stat">
+          <div class="ending-stat-value" id="stat-time">—</div>
+          <div class="ending-stat-label">用时</div>
+        </div>
+        <div class="ending-stat">
+          <div class="ending-stat-value stat-green" id="stat-channels">—</div>
+          <div class="ending-stat-label">证据通道</div>
+        </div>
+        <div class="ending-stat">
+          <div class="ending-stat-value stat-gold" id="stat-choice">—</div>
+          <div class="ending-stat-label">最终抉择</div>
+        </div>
+      </div>
+
+      <!-- 后日谈 -->
+      <div class="epilogue-section" id="epilogue" style="opacity:0;">
+        <div class="epilogue-title">📰 三个月后...</div>
+        <div class="epilogue-item epilogue-good">
+          <strong>梁志远</strong>已被停职并移交司法调查。审计委员会的独立报告确认了你的全部发现。
+        </div>
+        <div class="epilogue-item epilogue-good">
+          <strong>AX13 门锁</strong>已全面召回。3,200 户受影响家庭收到了正式通知和免费更换服务。
+        </div>
+        <div class="epilogue-item epilogue-good">
+          <strong>许知微</strong>的工单被重新开启并升级为 P0。她收到了公司的正式道歉和完整补偿。
+        </div>
+        <div class="epilogue-item epilogue-good">
+          <strong>HZ-7 系统</strong>加入了双人审核机制和强制日志不可篡改设计，TrustHold 覆盖功能被永久禁用。
+        </div>
+        <div class="epilogue-item epilogue-neutral">
+          <strong>你</strong>获得了"年度合规审计员"表彰。一封匿名邮件说"谢谢你没有放弃"——署名是 USR-3391。
+        </div>
+      </div>
+
+      <!-- 线索回顾 -->
+      <div class="clue-summary" id="clue-summary" style="opacity:0;">
+        <div class="clue-summary-title">🔍 调查线索回顾</div>
+        <div id="clue-list"></div>
+      </div>
+
+      <div class="ending-actions" id="ending-actions" style="opacity:0;">
+        <button class="btn-primary" onclick="restartGame()">🔄 重新调查</button>
+        <button class="btn-secondary" onclick="tryDifferentChoice()">⚖️ 做出不同的选择</button>
+      </div>
+
+      <div class="ending-quote" id="ending-quote" style="opacity:0;">
+        "你没有修好 AI。你拆穿了利用 AI 的人。<br>
+        许知微的求救不再是一条被折叠的系统消息——<br>
+        它现在是一份改变了制度的正式事故证据。"
+      </div>
+    </div>
+  </div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    const fullText = `你在 AI 代理完成最后一轮清理前，成功将原始执行快照、被篡改的知识库版本和许知微的完整工单记录同步发送至多个安全通道。
+
+自动执行队列被暂停。伤害链被切断。
+
+审计委员会在收到你的证据包后 48 小时内启动了独立调查。梁志远的所有系统权限被冻结。KB-4412 的篡改记录被完整保全。
+
+许知微的求救不再是一条被折叠的系统消息——
+它现在是一份改变了整个系统的正式事故证据。`;
+
+    async function playEnding() {
+      const textEl = document.getElementById('ending-text');
+      await Interactions.typewriter(textEl, fullText, 35);
+
+      // 评级
+      setTimeout(() => {
+        const state = NightAudit.getState();
+        const clueCount = Object.keys(state.clues).length;
+        const channels = state.evidenceSent || 0;
+        let grade, gradeClass, gradeDesc;
+
+        if (clueCount >= 15 && channels >= 3) {
+          grade = 'S'; gradeClass = 'grade-S'; gradeDesc = '完美调查 — 全部线索收集，证据多重备份';
+        } else if (clueCount >= 12) {
+          grade = 'A+'; gradeClass = 'grade-A'; gradeDesc = '优秀调查 — 几乎没有遗漏';
+        } else if (clueCount >= 8) {
+          grade = 'A'; gradeClass = 'grade-A'; gradeDesc = '出色的调查，真相完整还原';
+        } else {
+          grade = 'A-'; gradeClass = 'grade-A'; gradeDesc = '调查有效，部分线索可进一步深挖';
+        }
+
+        document.getElementById('grade-value').textContent = grade;
+        document.getElementById('grade-value').className = 'grade-value ' + gradeClass;
+        document.getElementById('grade-desc').textContent = gradeDesc;
+
+        // 评分规则透明化
+        const gradeEl = document.getElementById('ending-grade');
+        const rulesDiv = document.createElement('div');
+        rulesDiv.style.cssText = 'margin-top:12px;font-size:12px;color:var(--text-secondary);line-height:1.8;';
+        rulesDiv.innerHTML = `
+          <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
+            <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">📊 评分规则</div>
+            <div>S 级：收集 ≥15 条线索 + 发送 ≥3 个证据通道 ${clueCount >= 15 && channels >= 3 ? '✅' : '❌'}</div>
+            <div>A+ 级：收集 ≥12 条线索 ${clueCount >= 12 ? '✅' : '❌'}</div>
+            <div>A 级：收集 ≥8 条线索 ${clueCount >= 8 ? '✅' : '❌'}</div>
+            <div style="margin-top:6px;">你的数据：<strong>${clueCount}</strong> 条线索 / <strong>${channels}</strong> 个证据通道</div>
+            ${clueCount < 15 ? `<div style="color:var(--accent-gold);margin-top:4px;">💡 提示：返回调查中仔细搜索每个章节，可能有遗漏的线索</div>` : ''}
+          </div>
+        `;
+        gradeEl.appendChild(rulesDiv);
+
+        const el = document.getElementById('ending-grade');
+        el.style.transition = 'opacity 1s ease';
+        el.style.opacity = '1';
+      }, 600);
+
+      // 统计
+      setTimeout(() => {
+        const state = NightAudit.getState();
+        const clues = Object.keys(state.clues).length;
+        const elapsed = state.startTime ? Math.floor((Date.now() - state.startTime) / 60000) : '—';
+        const channels = state.evidenceSent || 0;
+
+        document.getElementById('stat-clues').textContent = clues;
+        document.getElementById('stat-time').textContent = elapsed + ' 分钟';
+        document.getElementById('stat-channels').textContent = channels + '/3';
+        document.getElementById('stat-choice').textContent = '公开揭露';
+
+        const el = document.getElementById('ending-stats');
+        el.style.transition = 'opacity 1s ease';
+        el.style.opacity = '1';
+      }, 1200);
+
+      // 后日谈
+      setTimeout(() => {
+        const el = document.getElementById('epilogue');
+        el.style.transition = 'opacity 1s ease';
+        el.style.opacity = '1';
+      }, 2000);
+
+      // 线索回顾
+      setTimeout(() => {
+        const state = NightAudit.getState();
+        const list = document.getElementById('clue-list');
+        const entries = Object.entries(state.clues);
+        if (entries.length > 0) {
+          list.innerHTML = entries.map(([id, c]) => `
+            <div class="clue-summary-item">
+              <span class="clue-summary-icon">🔍</span>
+              <div>
+                <div class="clue-summary-name">${c.name}</div>
+                <div class="clue-summary-src">${c.source}</div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:12px;">无线索记录</div>';
+        }
+        const el = document.getElementById('clue-summary');
+        el.style.transition = 'opacity 1s ease';
+        el.style.opacity = '1';
+      }, 2800);
+
+      // 按钮
+      setTimeout(() => {
+        const el = document.getElementById('ending-actions');
+        el.style.transition = 'opacity 1s ease';
+        el.style.opacity = '1';
+      }, 3400);
+
+      // 引言
+      setTimeout(() => {
+        const el = document.getElementById('ending-quote');
+        el.style.transition = 'opacity 1s ease';
+        el.style.opacity = '1';
+      }, 4000);
+    }
+
+    function restartGame() {
+      NightAudit.reset();
+      window.location.href = 'prologue.html';
+    }
+
+    function tryDifferentChoice() {
+      NightAudit.set('choiceMade', false);
+      NightAudit.set('moralChoice', null);
+      NightAudit.set('ending', null);
+      NightAudit.set('queuePaused', false);
+      NightAudit.set('evidenceSent', 0);
+      window.location.href = 'choices.html';
+    }
+
+    playEnding();
+  </script>
+</body>
+</html>
