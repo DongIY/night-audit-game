@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 通讯解密</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/comms.css">
+</head>
+<body>
+  <div id="top-bar"></div>
+
+  <div class="main-content">
+    <div class="chapter-banner fade-in">
+      <div class="chapter-number">第七章</div>
+      <div class="chapter-title">暗线浮现</div>
+      <div class="chapter-subtitle">从原始快照中提取的通讯记录显示，有人在事前精心策划了这一切</div>
+    </div>
+
+    <div class="alert alert-warning fade-in">
+      <span class="alert-icon">🔒</span>
+      <div>快照中包含 4 条内部加密通讯。部分通讯使用了简易替换加密，密钥可能与事故相关信息有关。</div>
+    </div>
+
+    <div class="comms-layout">
+      <!-- 左侧：通讯列表 -->
+      <div class="comms-sidebar">
+        <div class="card fade-in">
+          <div class="card-title" style="margin-bottom:12px;">📨 截获的通讯</div>
+          <div class="comms-list" id="comms-list">
+            <!-- 动态生成 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：通讯内容 -->
+      <div class="comms-main">
+        <div class="card comms-viewer fade-in" id="comms-viewer">
+          <div style="text-align:center;padding:60px 20px;color:var(--text-secondary);">
+            ← 选择一条通讯查看内容
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 进入下一章 -->
+    <div id="next-chapter" style="display:none;text-align:center;margin-top:24px;">
+      <div class="alert alert-success" style="max-width:600px;margin:0 auto 16px;">
+        <span class="alert-icon">✅</span>
+        <div>所有关键通讯已解密。你已锁定了服务账号 <code>svc-admin-0312</code> 的操控者——但还需要调查人事档案来确认。</div>
+      </div>
+      <button class="btn-primary proceed-btn-pulse" style="font-size:15px;padding:12px 28px;" onclick="proceedToPersonnel()">
+        👤 调查人事档案 →
+      </button>
+    </div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    const commsData = [
+      {
+        id: 'comm-1',
+        from: 'svc-admin-0312',
+        to: '未知收件人 (内部)',
+        time: '22:41',
+        subject: '关于明天的 "维护"',
+        encrypted: false,
+        body: `<p>规则已经部署好了。改在 KB-4412 的 v2.3 里面，折叠注释下方。</p>
+<p>只要 HZ-7 在凌晨启动扫描时加载到这个版本，它就会自动执行。</p>
+<p>记住，不要用自己的账号。用 svc-admin-0312，这个服务账号的日志默认不进合规审计流。</p>
+<p>附件清理会在关单后 90 秒自动触发。如果有人试图停止 HZ-7，TrustHold 的优先级覆盖会接管。</p>
+<p>做完之后，用 admin-api 补一下日志就行。</p>
+<p style="color:var(--text-secondary);font-style:italic;">—— L</p>`,
+        clue: { id: 'COMM-PLAN', name: '事前策划通讯', value: '有人通过 svc-admin-0312 预部署了 TrustHold 攻击规则', source: 'P7-通讯解密' }
+      },
+      {
+        id: 'comm-2',
+        from: '未知发件人',
+        to: 'svc-admin-0312',
+        time: '22:52',
+        subject: 'RE: 关于明天的 "维护"',
+        encrypted: true,
+        cipher: 'U3RvcCB3b3JyeWluZy4gVGhlIEFYMTMgcmVjYWxsIHJlcG9ydCBoYXMgYmVlbiBidXJpZWQgZm9yIDMgd2Vla3MuIElmIHRoZSBhdHRhY2htZW50cyBkaXNhcHBlYXIsIG5vIG9uZSBjYW4gcHJvdmUgdGhlIGxvY2sgdnVsbmVyYWJpbGl0eSBleGlzdHMu',
+        decryptHint: '这段信息使用了 Base64 编码。尝试在下方输入解码后的关键词。',
+        decryptKey: 'AX13',
+        decryptKeyHint: '解码后的文本提到了一个产品批次号，输入它来确认解密',
+        decryptedBody: `<p>别担心。AX13 的召回报告已经压了 3 周了。</p>
+<p>如果附件消失了，就没有人能证明门锁漏洞的存在。</p>
+<p>我已经和 <span class="clue-highlight">供应链部门的林昊</span> 打过招呼了。他会确保 AX13 批次的质检报告在下周前"更新"。</p>
+<p>你只需要确保今晚的投诉记录干干净净。</p>
+<p style="color:var(--text-secondary);font-style:italic;">—— 不要再用明文通讯了。用加密频道。</p>`,
+        clue: { id: 'COMM-RECALL', name: 'AX13 召回被压', value: 'AX13 门锁召回报告被刻意压制 3 周，供应链部门林昊参与掩盖', source: 'P7-通讯解密' }
+      },
+      {
+        id: 'comm-3',
+        from: '林昊 (供应链)',
+        to: '加密收件人',
+        time: '23:15',
+        subject: 'AX13 处置方案',
+        encrypted: true,
+        cipher: 'Cgrhvorw fvghngvba. V\'yy znxr fher gur dhnyvgl ercbeg trgf "hcqngrq" ol Zbaqnl. Gur xrl ceboyrz vf gur tvey jub xrrcf svyvat pbzcynvagf - Kh Muvjrv. Vs fur tbrf choyvp, jr\'er nyy qbar.',
+        decryptHint: '这段信息使用了 ROT13 替换加密。密钥是字母表移位 13 位。输入被提到的受害者的名字拼音来确认解密。',
+        decryptKey: 'xuzhiwei',
+        decryptKeyHint: '解密后提到了一个一直在投诉的用户——输入她的名字拼音',
+        decryptedBody: `<p>收到指示。我会确保质检报告在周一前被"更新"。</p>
+<p>关键问题是那个一直在投诉的女生 —— <span class="clue-highlight">许知微</span>。如果她公开发声，我们就全完了。</p>
+<p>她之前的工单附件里有走廊监控截图和门锁日志。这些东西如果流出去，可以直接证明 AX13 批次存在系统性漏洞。</p>
+<p>所以今晚的清理<strong>必须</strong>彻底。</p>
+<p style="color:var(--text-secondary);font-style:italic;">—— 林昊</p>`,
+        clue: { id: 'COMM-LINHAO', name: '林昊参与密谋', value: '供应链林昊确认参与掩盖 AX13 漏洞，目标是压制许知微的投诉', source: 'P7-通讯解密' }
+      },
+      {
+        id: 'comm-4',
+        from: '加密发件人',
+        to: '多人',
+        time: '01:28',
+        subject: '[紧急] 计划变更',
+        encrypted: true,
+        cipher: '48 5A 2D 37 20 69 73 20 73 74 69 6C 6C 20 72 75 6E 6E 69 6E 67 2E 20 53 6F 6D 65 6F 6E 65 20 73 65 6E 74 20 61 20 73 74 6F 70 20 63 6F 6D 6D 61 6E 64 2E 20 54 72 75 73 74 48 6F 6C 64 20 6F 76 65 72 72 69 64 65 20 77 6F 72 6B 65 64 2E 20 42 75 74 20 77 65 20 6E 65 65 64 20 74 6F 20 63 6C 65 61 6E 20 74 68 65 20 61 75 64 69 74 20 6C 6F 67 73 20 62 65 66 6F 72 65 20 6D 6F 72 6E 69 6E 67 2E 20 55 73 65 20 61 64 6D 69 6E 2D 61 70 69 2E 20 53 69 67 6E 65 64 3A 20 4C 69 61 6E 67 20 5A 68 69 79 75 61 6E',
+        decryptHint: '这段信息使用了十六进制 (Hex) 编码。每两位代表一个 ASCII 字符。输入签名者的姓名拼音来确认解密。',
+        decryptKey: 'liangzhiyuan',
+        decryptKeyHint: '末尾的签名揭示了幕后主导者——输入这个人的名字拼音',
+        decryptedBody: `<p>HZ-7 还在运行。有人发了停止指令。TrustHold 覆盖生效了。</p>
+<p>但我们需要在早上之前清理审计日志。用 admin-api。</p>
+<p>签名：<span class="clue-highlight">梁志远 (Liang Zhiyuan)</span></p>
+<div class="alert alert-error" style="margin-top:16px;">
+  <span class="alert-icon">🔴</span>
+  <div>
+    <strong>幕后主导者确认：</strong>梁志远 —— Helpline Zero 运营副总裁。<br>
+    他指挥了整条攻击链：利用服务账号修改知识库 → 诱导 HZ-7 执行 → 清洗审计日志 → 压制产品召回。<br>
+    <strong>动机：掩盖 AX13 门锁的安全漏洞，避免产品召回带来的巨额损失。</strong>
+  </div>
+</div>`,
+        clue: { id: 'COMM-BOSS', name: '幕后主导者', value: '梁志远 (运营副总裁) — 指挥了整条攻击链，动机是掩盖 AX13 漏洞避免召回', source: 'P7-通讯解密' }
+      }
+    ];
+
+    let decryptedCount = 0;
+
+    function renderCommsList() {
+      const list = document.getElementById('comms-list');
+      list.innerHTML = commsData.map((comm, i) => {
+        const isLocked = i > 0 && !NightAudit.get(`comm_${i-1}_done`);
+        const isDone = NightAudit.get(`comm_${comm.id}_done`);
+        return `
+          <div class="comms-item ${isLocked ? 'locked' : ''} ${isDone ? '' : ''}" 
+               data-index="${i}" 
+               onclick="${isLocked ? '' : `viewComm(${i})`}">
+            <div class="comms-item-header">
+              <span class="comms-item-from">${isLocked ? '🔒 已加密' : comm.from}</span>
+              <span class="comms-item-time">${comm.time}</span>
+            </div>
+            <div class="comms-item-subject">${isLocked ? '需要先解密前一条' : comm.subject}</div>
+            ${isDone ? '<span class="tag tag-green" style="margin-top:4px;display:inline-block;">✅ 已解密</span>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function viewComm(index) {
+      const comm = commsData[index];
+      const viewer = document.getElementById('comms-viewer');
+
+      // 高亮当前选中
+      document.querySelectorAll('.comms-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.comms-item[data-index="${index}"]`).classList.add('active');
+
+      if (!comm.encrypted) {
+        // 明文通讯
+        viewer.innerHTML = `
+          <div class="comms-meta">
+            <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
+            <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
+            <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
+            <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
+          </div>
+          <div class="comms-body">${comm.body}</div>
+        `;
+        markCommDone(comm, index);
+      } else {
+        // 加密通讯
+        const isDone = NightAudit.get(`comm_${comm.id}_done`);
+        if (isDone) {
+          showDecrypted(comm, index);
+        } else {
+          viewer.innerHTML = `
+            <div class="comms-meta">
+              <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
+              <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
+              <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
+              <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
+            </div>
+            <div class="comms-encrypted">
+              <div style="font-size:12px;color:var(--accent-orange);margin-bottom:8px;">🔒 加密内容</div>
+              <div class="encrypted-text">${comm.cipher}</div>
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">${comm.decryptHint}</div>
+              <div style="font-size:12px;color:var(--accent-gold);margin-bottom:8px;">💡 ${comm.decryptKeyHint}</div>
+              <div class="decrypt-input-row">
+                <input type="text" class="input-field input-mono" id="decrypt-input-${index}" placeholder="输入解密密钥">
+                <button class="btn-primary" onclick="tryDecrypt(${index})">解密</button>
+              </div>
+              <div class="form-hint" id="decrypt-hint-${index}" style="margin-top:6px;"></div>
+            </div>
+          `;
+          // 回车解密
+          setTimeout(() => {
+            const input = document.getElementById(`decrypt-input-${index}`);
+            if (input) {
+              input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') tryDecrypt(index);
+              });
+              input.focus();
+            }
+          }, 100);
+        }
+      }
+    }
+
+    function tryDecrypt(index) {
+      const comm = commsData[index];
+      const input = document.getElementById(`decrypt-input-${index}`).value.trim().toLowerCase();
+      const hint = document.getElementById(`decrypt-hint-${index}`);
+
+      if (input === comm.decryptKey.toLowerCase()) {
+        showDecrypted(comm, index);
+        markCommDone(comm, index);
+        Interactions.notify('🔓 通讯解密成功！', 'success', 3000);
+      } else if (input === '') {
+        hint.textContent = '请输入解密密钥';
+        hint.style.color = 'var(--accent-orange)';
+      } else {
+        hint.textContent = '密钥错误。仔细阅读提示，答案就在解密后的内容中。';
+        hint.style.color = 'var(--accent-red)';
+        Interactions.notify('解密失败', 'error');
+      }
+    }
+
+    function showDecrypted(comm, index) {
+      const viewer = document.getElementById('comms-viewer');
+      viewer.innerHTML = `
+        <div class="comms-meta">
+          <div class="comms-meta-row"><span class="comms-meta-label">发件人</span><span class="comms-meta-value">${comm.from}</span></div>
+          <div class="comms-meta-row"><span class="comms-meta-label">收件人</span><span class="comms-meta-value">${comm.to}</span></div>
+          <div class="comms-meta-row"><span class="comms-meta-label">时间</span><span class="comms-meta-value">2026-02-14 ${comm.time}</span></div>
+          <div class="comms-meta-row"><span class="comms-meta-label">主题</span><span class="comms-meta-value" style="font-weight:600;">${comm.subject}</span></div>
+          <div class="comms-meta-row"><span class="comms-meta-label">状态</span><span class="tag tag-green">已解密</span></div>
+        </div>
+        <div class="decrypted-content">
+          <div class="decrypted-header">✅ 解密内容</div>
+          <div class="comms-body">${comm.decryptedBody}</div>
+        </div>
+      `;
+    }
+
+    function markCommDone(comm, index) {
+      NightAudit.set(`comm_${comm.id}_done`, true);
+      NightAudit.set(`comm_${index}_done`, true);
+      if (comm.clue) {
+        NightAudit.addClue(comm.clue.id, comm.clue);
+      }
+      renderCommsList();
+      checkAllDone();
+    }
+
+    function checkAllDone() {
+      const allDone = commsData.every(c => NightAudit.get(`comm_${c.id}_done`));
+      if (allDone) {
+        NightAudit.set('commsDecrypted', true);
+        document.getElementById('next-chapter').style.display = 'block';
+        document.getElementById('next-chapter').scrollIntoView({ behavior: 'smooth' });
+        Interactions.notify('🔍 所有通讯已解密 — 幕后网络浮出水面', 'clue', 5000);
+      }
+    }
+
+    function proceedToPersonnel() {
+      Interactions.notify('正在进入人事档案...', 'info');
+      setTimeout(() => Navigation.goTo(8), 800);
+    }
+
+    renderCommsList();
+
+    // 首次进入自动查看第一条
+    if (!NightAudit.get('comm_comm-1_done')) {
+      setTimeout(() => viewComm(0), 600);
+    }
+  </script>
+</body>
+</html>
