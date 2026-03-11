@@ -215,7 +215,7 @@
       if (selectedChoice === 'expose') {
         // 公开揭露 → 进入终章（需要止损）
         Interactions.notify('你选择了真相。现在需要在证据被清除前完成止损。', 'warning', 4000);
-        setTimeout(() => Navigation.goTo(11), 2000);
+        setTimeout(() => Navigation.goTo(15), 2000);
       } else if (selectedChoice === 'negotiate') {
         // 内部斡旋 → 部分结局
         Interactions.notify('你选择了务实的道路。', 'info', 3000);
