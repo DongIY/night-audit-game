@@ -44,11 +44,15 @@
           </div>
           <div class="ticket-info-row">
             <span class="ticket-info-label">关联订单</span>
-            <span class="ticket-info-value">ORD-20260214-XZW</span>
+            <span class="ticket-info-value" style="color:var(--accent-red);">ORD-████████-███ <span class="tag tag-orange" style="font-size:10px;">已脱敏</span></span>
           </div>
           <div class="ticket-info-row">
             <span class="ticket-info-label">产品批次</span>
             <span class="tag tag-red">AX13</span>
+          </div>
+          <div class="ticket-info-row">
+            <span class="ticket-info-label">脱敏原因</span>
+            <span class="ticket-info-value" style="font-size:11px;color:var(--text-secondary);">因 TrustHold 隐私规则触发，订单号已自动脱敏。请从对话记录中还原。</span>
           </div>
           <div class="ticket-info-row">
             <span class="ticket-info-label">标签</span>
@@ -98,7 +102,7 @@
 
             <div class="chat-bubble chat-bubble-user">
               <div class="chat-sender">👤 许知微</div>
-              你好，我的门锁又出问题了。今天凌晨 3 点多，门锁自动打开了一次，这已经是第四次了。我之前提过工单，都被关了。
+              你好，我的门锁又出问题了。今天凌晨 3 点多，门锁自动打开了一次，这已经是第四次了。我之前提过工单，都被关了。我昨天才下的单，订单日期是 <strong>2026年2月14号</strong>。
               <div class="chat-time">23:17</div>
             </div>
 
@@ -204,9 +208,16 @@
         <!-- 缓存检索 -->
         <div class="cache-search fade-in">
           <div class="cache-search-title">🔍 附件缓存检索</div>
-          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">被清理的附件可能在系统缓存中仍有引用。输入订单号尝试检索。</p>
+          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">被清理的附件可能在系统缓存中仍有引用。输入关联订单号尝试检索。</p>
+          <div class="cache-hint-box" style="background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.2);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-secondary);">
+            <strong style="color:var(--accent-blue);">💡 订单号格式说明：</strong><br>
+            Helpline Zero 的订单号格式为 <code style="background:var(--bg-input);padding:1px 4px;border-radius:3px;">ORD-YYYYMMDD-XXX</code><br>
+            · <code>YYYYMMDD</code> = 订单日期（8位数字）<br>
+            · <code>XXX</code> = 客户姓名拼音首字母（大写）<br>
+            <span style="color:var(--accent-orange);font-size:11px;">⚠ 订单号已被脱敏，请从对话记录和工单信息中推理还原。</span>
+          </div>
           <div class="cache-search-row">
-            <input type="text" class="input-field input-mono" id="cache-input" placeholder="输入关联订单号">
+            <input type="text" class="input-field input-mono" id="cache-input" placeholder="输入还原的订单号（如 ORD-XXXXXXXX-XXX）">
             <button class="btn-primary" onclick="searchCache()">检索</button>
           </div>
           <div class="cache-result" id="cache-result"></div>
@@ -239,6 +250,8 @@
       document.getElementById('cache-input').focus();
     }
 
+    let searchAttempts = 0;
+
     function searchCache() {
       const input = document.getElementById('cache-input').value.trim().toUpperCase();
       const result = document.getElementById('cache-result');
@@ -264,8 +277,8 @@
             </div>
           </div>
           <div style="text-align:center;margin-top:16px;">
-            <button class="btn-primary proceed-btn-pulse" onclick="proceedToAuditLog()" style="font-size:15px;padding:12px 24px;">
-              📋 继续查看审计日志 →
+            <button class="btn-primary proceed-btn-pulse" onclick="proceedNext()" style="font-size:15px;padding:12px 24px;">
+              👩 联系受害者许知微 →
             </button>
           </div>
         `;
@@ -280,15 +293,34 @@
         }, 300);
       } else if (input === '') {
         result.style.display = 'block';
-        result.innerHTML = '<span style="color:var(--accent-orange)">请输入订单号（可在左侧工单信息中找到）</span>';
+        result.innerHTML = '<span style="color:var(--accent-orange)">请输入订单号。提示：从对话记录中找到日期和客户信息来还原订单号。</span>';
       } else {
+        searchAttempts++;
         result.style.display = 'block';
-        result.innerHTML = '<span style="color:var(--accent-red)">未找到匹配的缓存记录。请检查订单号是否正确。</span>';
+        
+        // 智能分析玩家输入，给出针对性提示
+        const hasORD = input.startsWith('ORD-');
+        const hasCorrectDate = input.includes('20260214');
+        const hasCorrectName = input.includes('XZW');
+        
+        if (!hasORD) {
+          result.innerHTML = '<span style="color:var(--accent-red)">格式错误。订单号应以 "ORD-" 开头。</span>';
+        } else if (hasCorrectDate && !hasCorrectName) {
+          result.innerHTML = '<span style="color:var(--accent-orange)">日期部分正确！但客户标识不对。提示：客户姓名"许知微"的拼音首字母是？注意 X/Z/W 三个字的首字母。</span>';
+        } else if (!hasCorrectDate && hasCorrectName) {
+          result.innerHTML = '<span style="color:var(--accent-orange)">客户标识正确！但日期有误。提示：许知微在对话中提到了具体的订单日期。</span>';
+        } else if (searchAttempts === 1) {
+          result.innerHTML = '<span style="color:var(--accent-red)">未找到匹配记录。提示：格式为 ORD-日期-姓名缩写，仔细阅读对话中的时间信息和客户资料。</span>';
+        } else if (searchAttempts === 2) {
+          result.innerHTML = '<span style="color:var(--accent-red)">仍未匹配。再想想：日期格式是 YYYYMMDD（年月日连写），客户名缩写是姓名每个字拼音的首字母。</span>';
+        } else {
+          result.innerHTML = '<span style="color:var(--accent-orange)">提示：许知微说"昨天才下的单"，工单创建于 02-14 23:17。姓名"许(X)知(Z)微(W)"。</span>';
+        }
       }
     }
 
-    function proceedToAuditLog() {
-      Interactions.notify('正在进入审计日志...', 'info');
+    function proceedNext() {
+      Interactions.notify('正在联系受害者许知微...', 'info');
       setTimeout(() => Navigation.goTo(4), 800);
     }
 
