@@ -31,8 +31,14 @@
 
         <div class="login-form">
           <div class="form-group">
+            <label class="form-label">审计员姓名</label>
+            <input type="text" class="input-field" id="player-name" placeholder="请输入你的姓名" maxlength="10" autocomplete="off">
+            <div class="form-hint" style="color:var(--text-secondary);">系统将根据姓名生成临时员工编号</div>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">员工编号</label>
-            <input type="text" class="input-field input-mono" id="employee-id" value="CSA-2917" readonly>
+            <input type="text" class="input-field input-mono" id="employee-id" value="——等待姓名输入——" readonly style="color:var(--text-secondary);">
           </div>
 
           <div class="form-group">
@@ -67,12 +73,15 @@
           </div>
           <div class="email-subject">【紧急】夜班审计临时授权通知</div>
           <div class="email-body">
-            <p>程述，你好：</p>
+            <p>审计员，你好：</p>
             <p>根据 P1 级事故响应流程，你已被临时授权接入 HZ-7 Incident #441 的审计调查权限。</p>
             <p>请使用以下临时验证码登录夜班审计终端：</p>
-            <div class="email-code-box">
+            <div class="email-code-box" id="code-box-locked">
               <span class="email-code-label">临时验证码</span>
-              <span class="email-code-value">NA-0441</span>
+              <span class="email-code-value" style="filter:blur(6px);user-select:none;" id="code-blurred">NA-0441</span>
+              <button style="display:block;margin:8px auto 0;padding:6px 16px;font-size:12px;font-family:inherit;background:rgba(58,123,213,0.15);color:var(--accent-blue);border:1px solid var(--accent-blue);border-radius:4px;cursor:pointer;" onclick="revealCode()">
+                🔐 安全验证 — 点击确认身份以查看
+              </button>
             </div>
             <p>注意事项：</p>
             <ul>
@@ -108,15 +117,59 @@
   <script src="js/navigation.js"></script>
   <script src="js/interactions.js"></script>
   <script>
+    // 根据姓名生成员工编号
+    function generateEmpId(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash) + name.charCodeAt(i);
+        hash = hash & 0xFFFF;
+      }
+      return 'CSA-' + (hash % 9000 + 1000);
+    }
+
+    // 姓名输入事件——自动生成员工编号
+    document.getElementById('player-name').addEventListener('input', function() {
+      const name = this.value.trim();
+      const empField = document.getElementById('employee-id');
+      if (name.length > 0) {
+        empField.value = generateEmpId(name);
+        empField.style.color = 'var(--accent-green)';
+      } else {
+        empField.value = '——等待姓名输入——';
+        empField.style.color = 'var(--text-secondary)';
+      }
+    });
+
+    // 揭示验证码
+    function revealCode() {
+      const blurred = document.getElementById('code-blurred');
+      blurred.style.filter = 'none';
+      blurred.style.userSelect = 'auto';
+      // 隐藏按钮
+      const btn = blurred.parentElement.querySelector('button');
+      if (btn) btn.style.display = 'none';
+      if (typeof Interactions !== 'undefined') Interactions.notify('验证码已解锁', 'info');
+    }
+
     function attemptLogin() {
+      const name = document.getElementById('player-name').value.trim();
       const code = document.getElementById('auth-code').value.trim().toUpperCase();
       const hint = document.getElementById('code-hint');
       const input = document.getElementById('auth-code');
+
+      // 检查姓名
+      if (!name) {
+        Interactions.notify('请先输入你的姓名', 'error');
+        document.getElementById('player-name').focus();
+        return;
+      }
 
       if (code === 'NA-0441') {
         // 登录成功
         input.classList.remove('input-error');
         NightAudit.set('loginComplete', true);
+        NightAudit.set('playerName', name);
+        NightAudit.set('employeeId', generateEmpId(name));
         NightAudit.addClue('VCODE', { name: '临时验证码', value: 'NA-0441', source: 'P1-登录页' });
         Interactions.notify('验证成功 — 正在进入事故总览...', 'success');
 
@@ -128,7 +181,7 @@
         hint.style.color = 'var(--accent-orange)';
       } else {
         input.classList.add('input-error');
-        hint.textContent = '验证码错误，请检查欢迎邮件';
+        hint.textContent = '验证码错误，请仔细查阅邮件';
         hint.style.color = 'var(--accent-red)';
         Interactions.notify('验证码错误', 'error');
       }
@@ -151,6 +204,14 @@
         Interactions.notify('检测到存档，正在恢复...', 'info');
         setTimeout(() => Navigation.goTo(lastPage), 1000);
       }
+    }
+
+    // 恢复已保存的玩家姓名
+    const savedName = NightAudit.get('playerName');
+    if (savedName) {
+      document.getElementById('player-name').value = savedName;
+      document.getElementById('employee-id').value = generateEmpId(savedName);
+      document.getElementById('employee-id').style.color = 'var(--accent-green)';
     }
   </script>
 </body>
