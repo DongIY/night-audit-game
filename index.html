@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 登录</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <div id="top-bar"></div>
+
+  <div class="main-content">
+    <!-- 系统公告 -->
+    <div class="system-banner alert alert-error fade-in">
+      <span class="alert-icon">🔴</span>
+      <div>
+        <strong>紧急通知 — HZ-7 Incident #441</strong><br>
+        HZ-7 客服代理于 01:32 AM 触发多条异常执行操作。事故等级已升至 P1。<br>
+        所有当值审计人员请立即登录系统并开始排查流程。
+      </div>
+    </div>
+
+    <div class="login-layout">
+      <!-- 左侧：登录表单 -->
+      <div class="login-panel card fade-in">
+        <div class="login-header">
+          <div class="login-logo">HELPLINE<span class="logo-zero">ZERO</span></div>
+          <div class="login-subtitle">夜班审计终端 — 合规审计员入口</div>
+        </div>
+
+        <div class="login-form">
+          <div class="form-group">
+            <label class="form-label">员工编号</label>
+            <input type="text" class="input-field input-mono" id="employee-id" value="CSA-2917" readonly>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">临时验证码</label>
+            <input type="text" class="input-field input-mono" id="auth-code" placeholder="请输入验证码" maxlength="7" autocomplete="off">
+            <div class="form-hint" id="code-hint">请在右侧欢迎邮件中查找验证码</div>
+          </div>
+
+          <button class="btn-primary login-btn" id="login-btn" onclick="attemptLogin()">
+            🔓 登录系统
+          </button>
+        </div>
+
+        <div class="login-footer">
+          <div class="login-footer-line">事故等级: <span class="tag tag-red">P1 — CRITICAL</span></div>
+          <div class="login-footer-line">事故编号: HZ-7 Incident #441</div>
+          <div class="login-footer-line">当前时间: <span class="mono-text">2026-02-15 02:47:12 CST</span></div>
+        </div>
+      </div>
+
+      <!-- 右侧：欢迎邮件 -->
+      <div class="email-panel card fade-in">
+        <div class="email-header">
+          <span class="email-icon">📧</span>
+          <span class="email-title">待读邮件 (1)</span>
+        </div>
+
+        <div class="email-item">
+          <div class="email-meta">
+            <span class="email-from">system@helplinezero.com</span>
+            <span class="email-time">02:41 AM</span>
+          </div>
+          <div class="email-subject">【紧急】夜班审计临时授权通知</div>
+          <div class="email-body">
+            <p>程述，你好：</p>
+            <p>根据 P1 级事故响应流程，你已被临时授权接入 HZ-7 Incident #441 的审计调查权限。</p>
+            <p>请使用以下临时验证码登录夜班审计终端：</p>
+            <div class="email-code-box">
+              <span class="email-code-label">临时验证码</span>
+              <span class="email-code-value">NA-0441</span>
+            </div>
+            <p>注意事项：</p>
+            <ul>
+              <li>本次授权仅限 Incident #441 范围内的审计操作</li>
+              <li>你的初始权限等级为 <strong>L1 — 只读审计</strong></li>
+              <li>如需提升权限，请通过系统内合规流程申请</li>
+              <li>所有操作将被记录至审计追踪日志</li>
+            </ul>
+            <p class="email-sign">—— Helpline Zero 自动化运维系统</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部系统公告滚动 -->
+    <div class="scroll-banner fade-in">
+      <div class="scroll-banner-inner">
+        <span class="scroll-item">⚠️ HZ-7 在过去 75 分钟内自动关闭了 23 条高风险工单</span>
+        <span class="scroll-sep">|</span>
+        <span class="scroll-item">⚠️ 3 条人工停止指令被忽略</span>
+        <span class="scroll-sep">|</span>
+        <span class="scroll-item">⚠️ 附件清理任务仍在执行中</span>
+        <span class="scroll-sep">|</span>
+        <span class="scroll-item">🔴 事故升级至 P1 — 需要立即排查</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    function attemptLogin() {
+      const code = document.getElementById('auth-code').value.trim().toUpperCase();
+      const hint = document.getElementById('code-hint');
+      const input = document.getElementById('auth-code');
+
+      if (code === 'NA-0441') {
+        // 登录成功
+        input.classList.remove('input-error');
+        NightAudit.set('loginComplete', true);
+        NightAudit.addClue('VCODE', { name: '临时验证码', value: 'NA-0441', source: 'P1-登录页' });
+        Interactions.notify('验证成功 — 正在进入事故总览...', 'success');
+
+        setTimeout(() => {
+          Navigation.goTo(2);
+        }, 1200);
+      } else if (code === '') {
+        hint.textContent = '请输入验证码';
+        hint.style.color = 'var(--accent-orange)';
+      } else {
+        input.classList.add('input-error');
+        hint.textContent = '验证码错误，请检查欢迎邮件';
+        hint.style.color = 'var(--accent-red)';
+        Interactions.notify('验证码错误', 'error');
+      }
+    }
+
+    // 回车提交
+    document.getElementById('auth-code').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') attemptLogin();
+    });
+
+    // 如果没完成序章，跳回序章
+    if (!NightAudit.get('prologueDone')) {
+      window.location.href = 'prologue.html';
+    }
+
+    // 如果已经登录过，自动跳转
+    if (NightAudit.get('loginComplete')) {
+      const lastPage = NightAudit.get('currentPage');
+      if (lastPage > 1) {
+        Interactions.notify('检测到存档，正在恢复...', 'info');
+        setTimeout(() => Navigation.goTo(lastPage), 1000);
+      }
+    }
+  </script>
+</body>
+</html>
