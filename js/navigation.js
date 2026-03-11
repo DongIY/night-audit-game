@@ -56,8 +56,8 @@ const Navigation = (() => {
 
   // 每个页面的引导文案
   const pageGuides = {
-    0: { icon: '🌙', title: '深夜来电', text: '你是 Helpline Zero 的合规审计员程述。凌晨2点47分，手机突然响起——一个P1级事故需要你立即介入。<br><br>仔细阅读来电内容，准备进入系统。' },
-    1: { icon: '🔐', title: '登录系统', text: '你需要找到临时验证码才能登录系统。<br><br><strong>提示：</strong>仔细阅读右侧的欢迎邮件，验证码就在其中。' },
+    0: { icon: '🌙', title: '深夜来电', text: '你是 Helpline Zero 的合规审计员。凌晨2点47分，手机突然响起——一个P1级事故需要你立即介入。<br><br>仔细阅读来电内容，准备进入系统。' },
+    1: { icon: '🔐', title: '登录系统', text: '输入你的姓名并找到临时验证码才能登录系统。<br><br><strong>提示：</strong>仔细阅读右侧的邮件，点击安全验证以获取验证码。' },
     2: { icon: '🔍', title: '定位可疑工单', text: '23条工单被异常关闭，但不是所有的都可疑。<br><br><strong>提示：</strong>使用标签筛选器，尝试不同的标签组合来缩小范围。关注那些被系统自动处理的高风险工单。' },
     3: { icon: '📋', title: '寻找证据', text: '这条工单被异常关闭，附件也被清理了。但缓存中可能还有残留。<br><br><strong>提示：</strong>仔细阅读对话记录和工单信息，找到关键的订单号来检索缓存。' },
     4: { icon: '⏱️', title: '发现时间线异常', text: 'HZ-7 的执行日志记录了所有操作。但有些操作之间的时间间隔不正常。<br><br><strong>提示：</strong>选中两条日志进行时间差分析。重点关注"停止"指令和"继续执行"之间的关系。' },
@@ -166,7 +166,7 @@ const Navigation = (() => {
           <span class="top-bar-sep">|</span>
           <span class="top-bar-time" id="game-clock">02:47 AM</span>
           <span class="top-bar-sep">|</span>
-          <span class="top-bar-user">CSA-2917 程述</span>
+          <span class="top-bar-user">${(NightAudit.get('employeeId') || 'CSA-2917')} ${NightAudit.get('playerName') || '审计员'}</span>
         </div>
       </div>
     `;
