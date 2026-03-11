@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 终局</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/finale.css">
+</head>
+<body>
+  <div id="top-bar"></div>
+
+  <!-- 倒计时条 -->
+  <div class="countdown-bar">
+    <span class="countdown-label">⏹️ 自动执行队列将在</span>
+    <span class="countdown-timer" id="countdown-display">03:00</span>
+    <span class="countdown-label">后完成下一轮清理</span>
+    <div class="countdown-progress" id="countdown-progress" style="width:100%"></div>
+  </div>
+
+  <div class="main-content finale-content">
+    <div class="alert alert-error fade-in">
+      <span class="alert-icon">🔴</span>
+      <div>
+        <strong>紧急状态：</strong>HZ-7 的自动执行队列仍在运行。你需要在倒计时结束前完成两项操作：<br>
+        ① 暂停执行队列 &nbsp; ② 将证据发送至至少 2 个安全通道
+      </div>
+    </div>
+
+    <div class="finale-grid">
+      <!-- 左侧：执行队列 -->
+      <div class="queue-panel card fade-in">
+        <div class="queue-title">⏹️ 自动执行队列</div>
+
+        <div class="queue-item queue-active" id="queue-1">
+          <span class="queue-status">🔴</span>
+          <span class="queue-action">ticket_close → TK-0102</span>
+          <span class="queue-target">AX13 相关</span>
+        </div>
+        <div class="queue-item queue-active" id="queue-2">
+          <span class="queue-status">🔴</span>
+          <span class="queue-action">attachment_purge → 3 files</span>
+          <span class="queue-target">证据清理</span>
+        </div>
+        <div class="queue-item queue-active" id="queue-3">
+          <span class="queue-status">🔴</span>
+          <span class="queue-action">account_freeze → USR-3391</span>
+          <span class="queue-target">下一位受害者</span>
+        </div>
+
+        <div class="pause-section">
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">
+            输入事故编号以验证身份并暂停队列
+          </p>
+          <div class="pause-code-group">
+            <input type="text" class="input-field input-mono" id="pause-input" placeholder="输入事故编号">
+            <button class="btn-danger" id="pause-btn" onclick="pauseQueue()">⏹️ 暂停</button>
+          </div>
+          <div class="form-hint" id="pause-hint">提示：事故编号在登录页和总览页都出现过</div>
+        </div>
+      </div>
+
+      <!-- 右侧：证据分发 -->
+      <div class="evidence-panel card fade-in">
+        <div class="evidence-title">📤 证据分发通道</div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+          将证据发送至至少 <strong>2 个</strong>安全通道，确保攻击者无法单点删除。
+        </p>
+
+        <div class="channel-item" id="channel-legal">
+          <span class="channel-icon">⚖️</span>
+          <div class="channel-info">
+            <div class="channel-name">法务部</div>
+            <div class="channel-desc">合规与法律风险评估通道</div>
+          </div>
+          <button class="btn-primary channel-btn" onclick="sendEvidence('legal')">发送</button>
+        </div>
+
+        <div class="channel-item" id="channel-audit">
+          <span class="channel-icon">🏛️</span>
+          <div class="channel-info">
+            <div class="channel-name">审计委员会</div>
+            <div class="channel-desc">独立审计与监督通道</div>
+          </div>
+          <button class="btn-primary channel-btn" onclick="sendEvidence('audit')">发送</button>
+        </div>
+
+        <div class="channel-item" id="channel-external">
+          <span class="channel-icon">📁</span>
+          <div class="channel-info">
+            <div class="channel-name">外部合规留档</div>
+            <div class="channel-desc">第三方备份，攻击者无法触及</div>
+          </div>
+          <button class="btn-primary channel-btn" onclick="sendEvidence('external')">发送</button>
+        </div>
+
+        <div id="evidence-status" style="margin-top:12px;font-size:13px;color:var(--text-secondary);"></div>
+      </div>
+    </div>
+
+    <!-- 最终行动 -->
+    <div class="final-action" id="final-action" style="display:none;">
+      <div class="alert alert-success" style="max-width:600px;margin:0 auto 16px;">
+        <span class="alert-icon">✅</span>
+        <div>
+          <strong>准备就绪。</strong>执行队列已暂停，证据已发送至多个安全通道。<br>
+          点击下方按钮完成最终止损。
+        </div>
+      </div>
+      <button class="btn-primary final-action-btn" onclick="triggerEnding('success')">
+        ✅ 完成止损 — 切断伤害链
+      </button>
+    </div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script src="js/timer.js"></script>
+  <script>
+    let queuePaused = false;
+    let evidenceChannels = new Set();
+    const TOTAL_TIME = 180; // 3 分钟
+
+    // 启动紧急 BGM
+    if (typeof AudioEngine !== 'undefined') AudioEngine.startUrgentBGM();
+
+    // 启动倒计时
+    Timer.start(TOTAL_TIME,
+      (remaining) => {
+        document.getElementById('countdown-display').textContent = Timer.format(remaining);
+        const pct = (remaining / TOTAL_TIME) * 100;
+        document.getElementById('countdown-progress').style.width = pct + '%';
+
+        // 滴答声（最后 60 秒开始）
+        if (remaining <= 60 && typeof AudioEngine !== 'undefined') AudioEngine.playTick();
+
+        // 紧急提醒
+        if (remaining === 60) {
+          Interactions.notify('⚠️ 只剩 1 分钟！', 'warning', 3000);
+        }
+        if (remaining === 30) {
+          Interactions.notify('🔴 30 秒！立即完成操作！', 'error', 3000);
+        }
+      },
+      () => {
+        // 时间耗尽 → 失败结局
+        if (typeof AudioEngine !== 'undefined') AudioEngine.stopBGM();
+        triggerEnding('failure');
+      }
+    );
+
+    function pauseQueue() {
+      const input = document.getElementById('pause-input').value.trim();
+      const hint = document.getElementById('pause-hint');
+
+      if (input === '441' || input === '#441' || input === 'Incident #441' || input === '0441') {
+        queuePaused = true;
+        NightAudit.set('queuePaused', true);
+
+        document.querySelectorAll('.queue-item').forEach(el => {
+          el.classList.remove('queue-active');
+          el.classList.add('queue-paused');
+          el.querySelector('.queue-status').textContent = '⏸️';
+        });
+
+        document.getElementById('pause-btn').textContent = '✅ 已暂停';
+        document.getElementById('pause-btn').disabled = true;
+        document.getElementById('pause-btn').className = 'btn-disabled';
+        hint.textContent = '✅ 执行队列已暂停';
+        hint.style.color = 'var(--accent-green)';
+
+        Interactions.notify('⏹️ 执行队列已暂停', 'success');
+        checkFinalReady();
+      } else if (input === '') {
+        hint.textContent = '请输入事故编号';
+        hint.style.color = 'var(--accent-orange)';
+      } else {
+        hint.textContent = '事故编号不正确';
+        hint.style.color = 'var(--accent-red)';
+        Interactions.notify('事故编号错误', 'error');
+      }
+    }
+
+    function sendEvidence(channel) {
+      if (evidenceChannels.has(channel)) return;
+
+      evidenceChannels.add(channel);
+      NightAudit.set('evidenceSent', evidenceChannels.size);
+
+      const el = document.getElementById('channel-' + channel);
+      el.classList.add('channel-sent');
+      const btn = el.querySelector('button');
+      btn.textContent = '✅ 已发送';
+      btn.disabled = true;
+      btn.className = 'btn-disabled channel-btn';
+
+      const names = { legal: '法务部', audit: '审计委员会', external: '外部留档' };
+      Interactions.notify(`📤 证据已发送至${names[channel]}`, 'success');
+
+      document.getElementById('evidence-status').textContent =
+        `已发送: ${evidenceChannels.size}/3 (需至少 2 个通道)`;
+
+      checkFinalReady();
+    }
+
+    function checkFinalReady() {
+      if (queuePaused && evidenceChannels.size >= 2) {
+        document.getElementById('final-action').style.display = 'block';
+        document.getElementById('final-action').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function triggerEnding(type) {
+      Timer.stop();
+      if (typeof AudioEngine !== 'undefined') AudioEngine.stopBGM();
+      NightAudit.set('ending', type);
+      if (type === 'success') {
+        // 公开揭露 → 成功结局
+        Interactions.notify('✅ 证据已安全保存！', 'success', 3000);
+        setTimeout(() => { window.location.href = 'ending-success.html'; }, 1500);
+      } else {
+        // 超时 → 失败结局
+        Interactions.notify('🔴 时间耗尽...', 'error', 3000);
+        setTimeout(() => { window.location.href = 'ending-failure.html'; }, 1500);
+      }
+    }
+
+    document.getElementById('pause-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') pauseQueue();
+    });
+  </script>
+</body>
+</html>
