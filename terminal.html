@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 服务器终端</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/terminal.css">
+</head>
+<body>
+  <div id="top-bar"></div>
+  <div class="main-content">
+    <div class="chapter-banner fade-in">
+      <div class="chapter-number">第九章</div>
+      <div class="chapter-title">深入核心</div>
+      <div class="chapter-subtitle">你获得了生产服务器的临时 SSH 访问权限。在这里找到最终的物理证据。</div>
+    </div>
+    <div class="terminal-container">
+      <div class="terminal-window fade-in">
+        <div class="terminal-titlebar">
+          <div class="terminal-dot dot-red"></div>
+          <div class="terminal-dot dot-yellow"></div>
+          <div class="terminal-dot dot-green"></div>
+          <div class="terminal-titlebar-text">csa-2917@srv-hz-prod-01 — bash</div>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <div class="term-line"><span class="term-output ascii-art">
+  _   _ ______   ____                  _ _
+ | | | |___  /  / __ \                | (_)
+ | |_| |  / /  | |  | |_   _____ _ __| |_ _ __   ___
+ |  _  | / /   | |  | \ \ / / _ \ '__| | | '_ \ / _ \
+ | | | |/ /__  | |__| |\ V /  __/ |  | | | | | |  __/
+ |_| |_/_____|  \____/  \_/ \___|_|  |_|_|_| |_|\___|
+          </span></div>
+          <div class="term-line"><span class="term-output term-info">Welcome to HZ Production Server (srv-hz-prod-01)</span></div>
+          <div class="term-line"><span class="term-output term-warning">⚠ Temporary audit access granted — Session expires in 30 min</span></div>
+          <div class="term-line"><span class="term-output">Last login: Sat Feb 15 01:28:44 2026 from 10.0.5.31</span></div>
+          <div class="term-separator"></div>
+        </div>
+        <div class="terminal-input-line" style="padding:0 16px 12px;">
+          <span class="term-prompt">csa-2917@hz-prod:~$ </span>
+          <input type="text" class="terminal-input" id="term-input" autofocus autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="cmd-history-panel fade-in">
+        <div class="cmd-history-title">💡 可用命令提示</div>
+        <div class="cmd-history-list" id="cmd-hints">
+          <span class="cmd-hint-tag" onclick="typeCmd('ls')">ls</span>
+          <span class="cmd-hint-tag" onclick="typeCmd('cat')">cat</span>
+          <span class="cmd-hint-tag" onclick="typeCmd('find')">find</span>
+          <span class="cmd-hint-tag" onclick="typeCmd('grep')">grep</span>
+          <span class="cmd-hint-tag" onclick="typeCmd('history')">history</span>
+          <span class="cmd-hint-tag" onclick="typeCmd('help')">help</span>
+        </div>
+      </div>
+      <div class="discovery-counter fade-in">
+        <span class="discovery-label">🔍 关键发现</span>
+        <span class="discovery-count" id="discovery-count">0 / 3</span>
+      </div>
+      <div id="next-chapter" style="display:none;text-align:center;margin-top:24px;">
+        <div class="alert alert-success" style="max-width:600px;margin:0 auto 16px;">
+          <span class="alert-icon">✅</span>
+          <div>所有关键物理证据已收集。你现在掌握了完整的攻击链证据。<br>接下来，你需要做一个决定。</div>
+        </div>
+        <button class="btn-primary proceed-btn-pulse" style="font-size:15px;padding:12px 28px;" onclick="proceedToChoices()">
+          ⚖️ 做出抉择 →
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="bottom-bar"></div>
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    const discoveries = new Set();
+    const cmdHistory = [];
+    let historyIdx = -1;
+
+    const fileSystem = {
+      '~': ['logs/', 'config/', 'data/', 'scripts/', '.bash_history'],
+      'logs': ['hz7-execution.log', 'admin-api-audit.log', 'svc-admin-0312.log', 'access.log'],
+      'config': ['hz7-agent.yaml', 'trusthold-rules.json', 'kb-sync.conf'],
+      'data': ['snapshots/', 'tickets/', 'attachments/'],
+      'data/snapshots': ['snap-0441-orig.db', 'snap-0441-modified.db', 'snap-diff.txt'],
+      'data/tickets': ['TK-0077-xuzhiwei.json', 'TK-0102-pending.json'],
+      'data/attachments': ['att-hash-7f3a.recovered', 'purge-queue.list'],
+      'scripts': ['auto-purge.sh', 'log-cleanup.py', 'kb-inject.sh']
+    };
+
+    const fileContents = {
+      '.bash_history': `ls -la /var/log/
+cd /opt/hz-service/
+cat config/trusthold-rules.json
+python3 scripts/log-cleanup.py --target audit-log --before 2026-02-15
+./scripts/kb-inject.sh KB-4412 v2.3 --force
+curl -X POST admin-api/audit/补写 -d '{"action":"stop","ts":"03:12:07.331"}'
+scp data/snapshots/snap-0441-orig.db backup@10.0.9.2:/dev/null`,
+      'hz7-execution.log': `[2026-02-15 01:12:33] HZ-7 START scan cycle #441
+[2026-02-15 01:12:34] Loading KB-4412 v2.3... OK
+[2026-02-15 01:12:35] TrustHold rule detected: priority_override=TRUE
+[2026-02-15 01:12:36] BEGIN auto-close: 23 tickets matching [night-risk]
+[2026-02-15 01:45:00] STOP command received from ops-console (陈嘉铭)
+[2026-02-15 01:45:00] TrustHold OVERRIDE: ignoring STOP — priority_level=CRITICAL
+[2026-02-15 01:45:00] CONTINUE execution...
+[2026-02-15 02:30:00] Attachment purge: 17 files queued
+[2026-02-15 03:12:07] External STOP attempt (CSA-2917) — TrustHold OVERRIDE active`,
+      'admin-api-audit.log': `[2026-02-15 01:28:44] POST /api/audit/write
+  source_ip: 10.0.5.31
+  user: svc-admin-0312
+  action: INSERT audit_entry
+  payload: {"timestamp":"03:12:07.331","action":"stop_confirmed","agent":"HZ-7","status":"stopped"}
+  NOTE: This entry was FABRICATED — actual stop was overridden by TrustHold
+  
+[2026-02-15 01:29:01] POST /api/audit/write  
+  source_ip: 10.0.5.31
+  user: svc-admin-0312
+  action: DELETE audit_entry
+  payload: {"timestamp":"01:45:00","action":"stop_rejected","reason":"trusthold_override"}`,
+      'svc-admin-0312.log': `Service Account Activity Log — svc-admin-0312
+Created: 2024-06-12 by EMP-3127 (梁志远)
+Last password change: 2026-02-14 21:00 by EMP-3127
+
+[2026-02-14 22:38] KB-4412 v2.3 modified — injected TrustHold override rule
+[2026-02-14 22:41] Internal comms sent via encrypted channel
+[2026-02-15 01:28] admin-api: fabricated audit entries
+[2026-02-15 01:29] admin-api: deleted genuine stop_rejected entries
+[2026-02-15 03:05] Remote session from 10.0.5.31 (梁志远 office VPN)`,
+      'trusthold-rules.json': `{
+  "rule_id": "TH-OVERRIDE-0441",
+  "created_by": "svc-admin-0312",
+  "created_at": "2026-02-14T22:38:00Z",
+  "priority": "CRITICAL",
+  "description": "Auto-override stop commands for scan cycle #441",
+  "conditions": {
+    "agent": "HZ-7",
+    "scan_cycle": 441,
+    "ticket_tags": ["night-risk", "AX13"]
+  },
+  "actions": {
+    "override_stop": true,
+    "continue_execution": true,
+    "purge_attachments_after_close": true,
+    "suppress_notifications": true
+  },
+  "注意": "This rule was injected without approval workflow"
+}`,
+      'snap-diff.txt': `--- snap-0441-orig.db
++++ snap-0441-modified.db
+
+Diff Summary:
+- 23 ticket records: status changed from "open" to "closed"
+- 17 attachment references: marked as "purged"
+- 3 notification entries: suppressed
+- 1 knowledge base entry (KB-4412): version rolled from v2.2 to v2.3
+- Audit log: 2 entries fabricated, 1 entry deleted
+
+INTEGRITY CHECK: Original snapshot hash = 7f3a91bc
+                 Modified snapshot hash = a4d2e8ff
+                 MISMATCH — data tampered`,
+      'auto-purge.sh': `#!/bin/bash
+# Auto-purge script — scheduled by svc-admin-0312
+# WARNING: This script permanently deletes evidence
+
+TARGET_DIR="/data/attachments"
+TICKET_IDS="TK-0077 TK-0088 TK-0091 TK-0102"
+
+for tid in $TICKET_IDS; do
+  find $TARGET_DIR -name "*$tid*" -exec rm -f {} \\;
+  echo "[$(date)] Purged attachments for $tid"
+done
+
+# Cover tracks
+> /var/log/purge.log
+echo "Cleanup complete. No evidence remains."`,
+      'TK-0077-xuzhiwei.json': `{
+  "ticket_id": "TK-0077",
+  "user": "许知微 (USR-3391)",
+  "subject": "AX13 门锁在凌晨自动解锁 — 严重安全问题",
+  "status": "force_closed_by_HZ7",
+  "original_status": "escalated_to_P1",
+  "attachments": [
+    {"name": "门锁日志截图.png", "status": "purged"},
+    {"name": "走廊监控截图.png", "status": "purged"},
+    {"name": "门锁固件版本.txt", "status": "purged"}
+  ],
+  "notes": "This ticket contains direct evidence of AX13 vulnerability"
+}`
+    };
+
+    function typeCmd(cmd) {
+      document.getElementById('term-input').value = cmd + ' ';
+      document.getElementById('term-input').focus();
+    }
+
+    function processCommand(cmd) {
+      const body = document.getElementById('terminal-body');
+      const parts = cmd.trim().split(/\s+/);
+      const command = parts[0];
+      const args = parts.slice(1).join(' ');
+
+      addLine(`<span class="term-prompt">csa-2917@hz-prod:~$ </span><span class="term-cmd">${escapeHtml(cmd)}</span>`);
+      NightAudit.addTerminalCmd(cmd, '');
+
+      switch(command) {
+        case 'help':
+          addLine('<span class="term-info">Available commands: ls, cat, find, grep, history, clear, help</span>');
+          addLine('<span class="term-output">  ls [dir]      — list directory contents</span>');
+          addLine('<span class="term-output">  cat [file]    — display file contents</span>');
+          addLine('<span class="term-output">  find [pattern]— search for files</span>');
+          addLine('<span class="term-output">  grep [text]   — search in file contents</span>');
+          addLine('<span class="term-output">  history       — show command history</span>');
+          addLine('<span class="term-output">  clear         — clear terminal</span>');
+          break;
+        case 'ls':
+          handleLs(args);
+          break;
+        case 'cat':
+          handleCat(args);
+          break;
+        case 'find':
+          handleFind(args);
+          break;
+        case 'grep':
+          handleGrep(args);
+          break;
+        case 'history':
+          handleHistory();
+          break;
+        case 'clear':
+          body.innerHTML = '';
+          break;
+        default:
+          addLine(`<span class="term-error">-bash: ${escapeHtml(command)}: command not found</span>`);
+      }
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function handleLs(path) {
+      const dir = path.replace(/^\.?\/?/, '').replace(/\/$/, '') || '~';
+      const contents = fileSystem[dir] || fileSystem['~'];
+      if (contents) {
+        const formatted = contents.map(f => f.endsWith('/') ? `<span class="term-tree-dir">${f}</span>` : `<span class="term-tree-file">${f}</span>`).join('  ');
+        addLine(`<span class="term-output">${formatted}</span>`);
+      } else {
+        addLine(`<span class="term-error">ls: cannot access '${escapeHtml(path)}': No such directory</span>`);
+        addLine('<span class="term-info">Hint: try ls logs/ or ls data/snapshots/</span>');
+      }
+    }
+
+    function handleCat(filename) {
+      if (!filename) { addLine('<span class="term-error">cat: missing operand</span>'); return; }
+      const fn = filename.replace(/^.*\//, '');
+      const content = fileContents[fn];
+      if (content) {
+        addLine(`<span class="term-output">${escapeHtml(content)}</span>`);
+        checkDiscovery(fn);
+      } else {
+        addLine(`<span class="term-error">cat: ${escapeHtml(filename)}: No such file</span>`);
+        addLine('<span class="term-info">Hint: try ls to see available files, then cat [filename]</span>');
+      }
+    }
+
+    function handleFind(pattern) {
+      if (!pattern) { addLine('<span class="term-error">find: missing pattern</span>'); return; }
+      const allFiles = Object.values(fileSystem).flat();
+      const matches = allFiles.filter(f => f.toLowerCase().includes(pattern.toLowerCase()));
+      if (matches.length > 0) {
+        matches.forEach(f => addLine(`<span class="term-output">./${f}</span>`));
+        addLine(`<span class="term-info">${matches.length} file(s) found</span>`);
+      } else {
+        addLine(`<span class="term-warning">No files matching '${escapeHtml(pattern)}'</span>`);
+      }
+    }
+
+    function handleGrep(args) {
+      if (!args) { addLine('<span class="term-error">grep: missing pattern</span>'); return; }
+      const pattern = args.toLowerCase();
+      let found = 0;
+      for (const [file, content] of Object.entries(fileContents)) {
+        const lines = content.split('\n');
+        const matches = lines.filter(l => l.toLowerCase().includes(pattern));
+        if (matches.length > 0) {
+          addLine(`<span class="term-info">— ${file} —</span>`);
+          matches.forEach(m => addLine(`<span class="term-output">  <span class="term-highlight">${escapeHtml(m)}</span></span>`));
+          found += matches.length;
+        }
+      }
+      if (found === 0) addLine(`<span class="term-warning">No matches for '${escapeHtml(args)}'</span>`);
+      else addLine(`<span class="term-info">${found} match(es) found</span>`);
+    }
+
+    function handleHistory() {
+      const histFile = fileContents['.bash_history'];
+      addLine('<span class="term-info">— .bash_history (previous session by svc-admin-0312) —</span>');
+      addLine(`<span class="term-output">${escapeHtml(histFile)}</span>`);
+      addLine('<span class="term-separator"></span>');
+      addLine('<span class="term-info">— your session —</span>');
+      cmdHistory.forEach((c, i) => addLine(`<span class="term-output">  ${i+1}  ${escapeHtml(c)}</span>`));
+      checkDiscovery('.bash_history');
+    }
+
+    function checkDiscovery(filename) {
+      const discoveryMap = {
+        'svc-admin-0312.log': { id: 'TERM-SVC', name: '服务账号创建者', value: 'svc-admin-0312 由 EMP-3127 (梁志远) 创建，VPN IP 10.0.5.31', source: 'P9-服务器终端' },
+        'admin-api-audit.log': { id: 'TERM-FABRICATE', name: '审计日志伪造证据', value: '梁志远通过 admin-api 伪造了停止确认记录并删除了真实的拒绝记录', source: 'P9-服务器终端' },
+        'auto-purge.sh': { id: 'TERM-PURGE', name: '自动清理脚本', value: '定时脚本永久删除工单附件并清除日志', source: 'P9-服务器终端' },
+        'snap-diff.txt': { id: 'TERM-DIFF', name: '快照篡改证据', value: '原始快照与当前数据对比显示 23 工单被改、17 附件被删', source: 'P9-服务器终端' },
+        '.bash_history': { id: 'TERM-HISTORY', name: '操作历史', value: 'svc-admin-0312 的 bash 历史显示完整的攻击操作链', source: 'P9-服务器终端' },
+        'trusthold-rules.json': { id: 'TERM-RULE', name: 'TrustHold 规则配置', value: '未经审批注入的覆盖规则，专门针对 HZ-7 441 号扫描', source: 'P9-服务器终端' },
+        'TK-0077-xuzhiwei.json': { id: 'TERM-VICTIM', name: '受害者工单详情', value: '许知微的 P1 工单被 HZ-7 强制关闭，所有附件被清除', source: 'P9-服务器终端' }
+      };
+      const d = discoveryMap[filename];
+      if (d && !discoveries.has(d.id)) {
+        discoveries.add(d.id);
+        NightAudit.addClue(d.id, d);
+        addLine(`<span class="term-separator"></span>`);
+        addLine(`<span class="term-success">🔍 关键发现：${d.name}</span>`);
+        addLine(`<span class="term-highlight">   ${d.value}</span>`);
+        Interactions.notify(`🔍 发现证据：${d.name}`, 'clue', 4000);
+        updateCounter();
+      }
+    }
+
+    function updateCounter() {
+      document.getElementById('discovery-count').textContent = `${discoveries.size} / 3`;
+      if (discoveries.size >= 3 && !NightAudit.get('terminalAccessed')) {
+        NightAudit.set('terminalAccessed', true);
+        document.getElementById('next-chapter').style.display = 'block';
+        setTimeout(() => document.getElementById('next-chapter').scrollIntoView({ behavior: 'smooth' }), 500);
+        Interactions.notify('✅ 关键证据已足够 — 可以继续', 'success', 5000);
+      }
+    }
+
+    function addLine(html) {
+      const body = document.getElementById('terminal-body');
+      const div = document.createElement('div');
+      div.className = 'term-line';
+      div.innerHTML = html;
+      body.appendChild(div);
+    }
+
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    function proceedToChoices() {
+      Interactions.notify('你即将面临一个艰难的抉择...', 'warning');
+      setTimeout(() => Navigation.goTo(10), 1000);
+    }
+
+    const input = document.getElementById('term-input');
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const cmd = input.value.trim();
+        if (cmd) {
+          cmdHistory.push(cmd);
+          historyIdx = cmdHistory.length;
+          processCommand(cmd);
+        }
+        input.value = '';
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (historyIdx > 0) { historyIdx--; input.value = cmdHistory[historyIdx]; }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIdx < cmdHistory.length - 1) { historyIdx++; input.value = cmdHistory[historyIdx]; }
+        else { historyIdx = cmdHistory.length; input.value = ''; }
+      }
+    });
+
+    document.addEventListener('click', () => input.focus());
+    if (NightAudit.get('terminalAccessed')) {
+      document.getElementById('next-chapter').style.display = 'block';
+      updateCounter();
+    }
+  </script>
+</body>
+</html>
