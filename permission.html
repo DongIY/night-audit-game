@@ -189,9 +189,9 @@
       if (validTokens.includes(input)) {
         NightAudit.set('tokenAssembled', true);
         NightAudit.set('snapshotRestored', true);
-        NightAudit.addClue('TPL-ID', { name: '审批模板编号', value: 'APR-2026-0441', source: 'P6-审批邮件' });
-        NightAudit.addClue('CACHE-ID', { name: '快照编号', value: 'snap-0441-orig', source: 'P6-令牌组装' });
-        NightAudit.addClue('TOKEN', { name: '恢复令牌', value: input, source: 'P6-令牌组装' });
+        NightAudit.addClue('TPL-ID', { name: '审批模板编号', value: 'APR-2026-0441', source: 'P9-审批邮件' });
+        NightAudit.addClue('CACHE-ID', { name: '快照编号', value: 'snap-0441-orig', source: 'P9-令牌组装' });
+        NightAudit.addClue('TOKEN', { name: '恢复令牌', value: input, source: 'P9-令牌组装' });
 
         Interactions.notify('🔓 令牌验证成功 — 正在恢复原始快照...', 'success', 3000);
         hint.textContent = '✅ 令牌正确';
@@ -217,7 +217,7 @@
 
     function proceedToFinale() {
       Interactions.notify('⚠️ 进入通讯解密 — 追踪幕后操控者', 'warning');
-      setTimeout(() => Navigation.goTo(7), 1000);
+      setTimeout(() => Navigation.goTo(10), 1000);
     }
 
     document.getElementById('token-input').addEventListener('keydown', (e) => {
