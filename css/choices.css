@@ -1,0 +1,269 @@
+/* ===== 第十章：道德抉择 ===== */
+
+.choices-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 案件摘要 */
+.case-summary {
+  padding: 24px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+}
+
+.case-summary-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.evidence-timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.evidence-timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 16px;
+  padding-left: 16px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  border: 2px solid var(--bg-panel);
+}
+
+.timeline-item.timeline-critical::before {
+  background: var(--accent-red);
+}
+
+.timeline-time {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.timeline-event {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* 选择卡片 */
+.choices-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.choice-card {
+  padding: 24px;
+  background: var(--bg-panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.choice-card:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+.choice-card.choice-expose:hover {
+  border-color: var(--accent-green);
+}
+
+.choice-card.choice-negotiate:hover {
+  border-color: var(--accent-gold);
+}
+
+.choice-card.choice-cover:hover {
+  border-color: var(--accent-red);
+}
+
+.choice-card.selected {
+  border-width: 2px;
+}
+
+.choice-card.selected.choice-expose {
+  border-color: var(--accent-green);
+  background: rgba(39,174,96,0.05);
+}
+
+.choice-card.selected.choice-negotiate {
+  border-color: var(--accent-gold);
+  background: rgba(243,156,18,0.05);
+}
+
+.choice-card.selected.choice-cover {
+  border-color: var(--accent-red);
+  background: rgba(231,76,60,0.05);
+}
+
+.choice-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.choice-icon {
+  font-size: 28px;
+}
+
+.choice-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.choice-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.choice-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.choice-consequences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.consequence-tag {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.consequence-positive {
+  background: rgba(39,174,96,0.1);
+  color: var(--accent-green);
+}
+
+.consequence-neutral {
+  background: rgba(243,156,18,0.1);
+  color: var(--accent-gold);
+}
+
+.consequence-negative {
+  background: rgba(231,76,60,0.1);
+  color: var(--accent-red);
+}
+
+/* 确认选择弹窗 */
+.choice-confirm-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.choice-confirm-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  max-width: 480px;
+  text-align: center;
+  animation: slideUp 0.4s ease;
+}
+
+.choice-confirm-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.choice-confirm-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.choice-confirm-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.choice-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* 过渡文字 */
+.transition-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 2;
+  margin: 32px 0;
+  animation: fadeIn 1s ease;
+}
+
+.transition-text strong {
+  color: var(--text-primary);
+}
+
+/* 道德罗盘 */
+.moral-compass {
+  text-align: center;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.moral-compass-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.moral-compass-question {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
