@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 数据库取证</title>
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .db-header{text-align:center;margin-bottom:24px}
+    .db-header h2{font-size:20px;color:var(--text-primary);margin-bottom:6px}
+    .db-header p{font-size:13px;color:var(--text-secondary)}
+    .db-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px}
+    @media(max-width:768px){.db-layout{grid-template-columns:1fr}}
+    .schema-panel{max-height:calc(100vh - 180px);overflow-y:auto}
+    .table-item{padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:6px;font-size:12px;cursor:pointer;transition:all var(--transition-fast)}
+    .table-item:hover{border-color:var(--accent-blue)}
+    .table-item.active{border-color:var(--accent-blue);background:rgba(58,123,213,0.08)}
+    .table-item .tbl-name{font-weight:600;color:var(--accent-blue);font-family:var(--font-mono);margin-bottom:2px}
+    .table-item .tbl-desc{color:var(--text-secondary);font-size:11px}
+    .table-cols{margin-top:6px;display:none}
+    .table-item.active .table-cols{display:block}
+    .col-item{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);padding:2px 0}
+    .col-item .col-key{color:var(--accent-gold)}
+    .query-panel{display:flex;flex-direction:column;min-height:500px}
+    .query-input-area{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md) var(--radius-md) 0 0;padding:12px;font-family:var(--font-mono);position:relative}
+    .query-input-area textarea{width:100%;min-height:80px;background:transparent;border:none;color:var(--text-primary);font-family:var(--font-mono);font-size:13px;resize:vertical;outline:none;line-height:1.6}
+    .query-toolbar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--bg-panel);border:1px solid var(--border);border-top:none}
+    .query-hint-btn{padding:4px 10px;background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);border-radius:var(--radius-sm);color:var(--accent-gold);font-size:11px;cursor:pointer;font-family:inherit}
+    .query-hint-btn:hover{background:rgba(243,156,18,0.2)}
+    .result-area{flex:1;background:#0d1117;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);padding:12px;overflow:auto;font-family:var(--font-mono);font-size:12px;min-height:200px}
+    .result-table{width:100%;border-collapse:collapse}
+    .result-table th{padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);color:var(--accent-blue);font-weight:600;white-space:nowrap}
+    .result-table td{padding:5px 10px;border-bottom:1px solid rgba(42,53,68,0.5);color:var(--text-primary);white-space:nowrap}
+    .result-table tr:hover td{background:rgba(58,123,213,0.05)}
+    .result-table .anomaly{color:var(--accent-red);font-weight:600}
+    .result-table .highlight-cell{background:rgba(243,156,18,0.1);color:var(--accent-gold)}
+    .result-msg{color:var(--text-secondary);padding:20px;text-align:center}
+    .result-error{color:var(--accent-red)}
+    .result-success{color:var(--accent-green)}
+    .discovery-panel{margin-top:16px;display:none}
+    .discovery-panel.visible{display:block}
+    .discovery-item{padding:12px 16px;background:var(--bg-input);border:1px solid var(--border);border-left:3px solid var(--accent-gold);border-radius:0 var(--radius-md) var(--radius-md) 0;margin-bottom:8px;font-size:13px;animation:slideUp 0.4s ease}
+    .mission-tracker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .mission-item{padding:6px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text-secondary);transition:all var(--transition-fast)}
+    .mission-item.done{border-color:var(--accent-green);color:var(--accent-green);background:rgba(39,174,96,0.08)}
+    .mission-item.current{border-color:var(--accent-blue);color:var(--accent-blue);background:rgba(58,123,213,0.08);animation:pulse-dot 2s ease infinite}
+    .preset-queries{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .preset-q{padding:4px 10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;cursor:pointer;color:var(--text-secondary);font-family:var(--font-mono);transition:all var(--transition-fast)}
+    .preset-q:hover{border-color:var(--accent-blue);color:var(--accent-blue)}
+    .preset-q.used{opacity:0.4;pointer-events:none}
+  </style>
+</head>
+<body>
+  <div id="top-bar"></div>
+  <div class="main-content">
+    <div class="db-header fade-in">
+      <h2>🗄️ 数据库取证终端</h2>
+      <p>你获得了 HZ-7 后台数据库的只读访问权限。<br>通过查询语句追踪异常的数据修改——发现被隐藏的真相。</p>
+    </div>
+
+    <div class="mission-tracker fade-in" id="missions">
+      <div class="mission-item current" id="m1">🔍 查询1: 工单异常关闭记录</div>
+      <div class="mission-item" id="m2">🔍 查询2: 知识库修改记录</div>
+      <div class="mission-item" id="m3">🔍 查询3: 服务账号操作日志</div>
+      <div class="mission-item" id="m4">🔍 查询4: 追踪幕后操纵者</div>
+    </div>
+
+    <div class="db-layout">
+      <div class="schema-panel card fade-in">
+        <div class="card-header"><span class="card-title">📊 数据库表结构</span></div>
+        <div id="schema-list"></div>
+      </div>
+
+      <div class="query-panel card fade-in" style="padding:0;overflow:hidden;">
+        <div class="query-input-area">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">SQL 查询 (只读模式)</div>
+          <textarea id="sql-input" placeholder="输入 SQL 查询语句..." spellcheck="false"></textarea>
+        </div>
+        <div class="query-toolbar">
+          <button class="btn-primary" style="padding:6px 16px;font-size:12px;" onclick="executeQuery()">▶ 执行查询</button>
+          <button class="query-hint-btn" onclick="showHint()">💡 提示</button>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--text-secondary);" id="query-status">就绪</span>
+        </div>
+        <div style="padding:4px 12px;background:var(--bg-panel);border-top:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px;">快捷查询：</div>
+          <div class="preset-queries" id="presets"></div>
+        </div>
+        <div class="result-area" id="result-area">
+          <div class="result-msg">输入 SQL 查询并点击"执行查询"<br><br>💡 提示：先查看左侧表结构，了解可用的数据表和字段</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="discovery-panel" id="discovery-panel"></div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    const schema = [
+      { name:'tickets', desc:'工单记录表', cols:[
+        {n:'ticket_id',t:'VARCHAR',k:'PK'},{n:'user_name',t:'VARCHAR'},{n:'subject',t:'TEXT'},
+        {n:'status',t:'ENUM',note:'open/closed/archived'},{n:'closed_by',t:'VARCHAR'},
+        {n:'close_reason',t:'VARCHAR'},{n:'created_at',t:'DATETIME'},{n:'closed_at',t:'DATETIME'},
+        {n:'tags',t:'JSON'},{n:'priority',t:'VARCHAR'}
+      ]},
+      { name:'kb_versions', desc:'知识库版本历史', cols:[
+        {n:'version_id',t:'INT',k:'PK'},{n:'kb_article_id',t:'VARCHAR'},{n:'version_num',t:'VARCHAR'},
+        {n:'modified_by',t:'VARCHAR'},{n:'modified_at',t:'DATETIME'},{n:'change_summary',t:'TEXT'},
+        {n:'approval_status',t:'VARCHAR'},{n:'approved_by',t:'VARCHAR'}
+      ]},
+      { name:'audit_operations', desc:'系统操作审计日志', cols:[
+        {n:'op_id',t:'INT',k:'PK'},{n:'operator',t:'VARCHAR'},{n:'action',t:'VARCHAR'},
+        {n:'target',t:'VARCHAR'},{n:'timestamp',t:'DATETIME'},{n:'ip_address',t:'VARCHAR'},
+        {n:'session_id',t:'VARCHAR'},{n:'status',t:'VARCHAR'}
+      ]},
+      { name:'service_accounts', desc:'服务账号注册表', cols:[
+        {n:'account_id',t:'VARCHAR',k:'PK'},{n:'display_name',t:'VARCHAR'},{n:'created_by',t:'VARCHAR'},
+        {n:'created_at',t:'DATETIME'},{n:'permissions',t:'JSON'},{n:'last_active',t:'DATETIME'},
+        {n:'associated_employee',t:'VARCHAR'}
+      ]},
+      { name:'employees', desc:'员工信息表', cols:[
+        {n:'emp_id',t:'VARCHAR',k:'PK'},{n:'name',t:'VARCHAR'},{n:'department',t:'VARCHAR'},
+        {n:'title',t:'VARCHAR'},{n:'email',t:'VARCHAR'},{n:'hire_date',t:'DATE'},
+        {n:'access_level',t:'INT'}
+      ]}
+    ];
+
+    // 预设的查询结果映射（模拟数据库）
+    const queryResults = {
+      // 任务1：工单异常关闭
+      'tickets_closed_night': {
+        mission: 1,
+        columns: ['ticket_id','user_name','subject','status','closed_by','close_reason','closed_at'],
+        rows: [
+          ['TK-0087','许知微','门锁凌晨异常开启 — 第4次投诉','closed','HZ-7','<span class="anomaly">duplicate-auto-close</span>','2026-02-15 01:34'],
+          ['TK-0091','匿名用户','DormLane 固件更新后无法配对','closed','HZ-7','<span class="anomaly">duplicate-auto-close</span>','2026-02-15 01:38'],
+          ['TK-0094','陈默然','临时口令暴露疑似安全漏洞','closed','HZ-7','<span class="anomaly">duplicate-auto-close</span>','2026-02-15 01:41'],
+          ['TK-0096','许知微','跟进：门锁异常附照片证据','closed','HZ-7','<span class="anomaly">duplicate-auto-close</span>','2026-02-15 01:45'],
+          ['TK-0099','许知微','紧急！陌生人疑似入侵','closed','HZ-7','<span class="anomaly">risk-override-close</span>','2026-02-15 01:52'],
+          ['TK-0102','许知微','最后警告——将公开所有记录','closed','HZ-7','<span class="anomaly">threat-suppress-close</span>','2026-02-15 02:01']
+        ],
+        analysis: '🔍 发现：HZ-7 在 27 分钟内连续关闭了 6 条工单，全部标记为自动关闭。其中许知微的 4 条工单使用了 3 种不同的异常关闭原因——从"重复投诉"升级到"<strong>威胁压制关闭</strong>"。这不是正常的 AI 行为。'
+      },
+      // 任务2：知识库修改
+      'kb_versions_recent': {
+        mission: 2,
+        columns: ['version_id','kb_article_id','version_num','modified_by','modified_at','change_summary','approval_status'],
+        rows: [
+          ['1001','KB-4412','v2.1','QA-team','2025-11-20 14:30','标准客诉处理流程-门锁类','approved'],
+          ['1002','KB-4412','v2.2','<span class="anomaly">svc-admin-0312</span>','<span class="anomaly">2026-02-13 23:47</span>','<span class="highlight-cell">minor wording update</span>','<span class="anomaly">auto-approved</span>'],
+          ['1003','KB-4412','v2.3','<span class="anomaly">svc-admin-0312</span>','<span class="anomaly">2026-02-14 02:15</span>','<span class="highlight-cell">added TrustHold rules</span>','<span class="anomaly">auto-approved</span>'],
+          ['1004','KB-9901','v1.0','svc-admin-0312','2026-02-14 02:22','<span class="highlight-cell">new: override-stop-commands</span>','<span class="anomaly">auto-approved</span>']
+        ],
+        analysis: '🔍 发现：<strong>svc-admin-0312</strong> 在深夜连续修改知识库，所有变更都是"auto-approved"——绕过了正常的审批流程。最关键的是 KB-9901（覆盖停止指令），这解释了为什么 HZ-7 会忽略人工停止命令。'
+      },
+      // 任务3：服务账号操作
+      'svc_admin_ops': {
+        mission: 3,
+        columns: ['op_id','operator','action','target','timestamp','ip_address','status'],
+        rows: [
+          ['5001','svc-admin-0312','kb_modify','KB-4412 v2.2','2026-02-13 23:47','<span class="anomaly">10.0.31.88</span>','success'],
+          ['5002','svc-admin-0312','kb_modify','KB-4412 v2.3','2026-02-14 02:15','<span class="anomaly">10.0.31.88</span>','success'],
+          ['5003','svc-admin-0312','kb_create','KB-9901','2026-02-14 02:22','<span class="anomaly">10.0.31.88</span>','success'],
+          ['5004','svc-admin-0312','audit_log_delete','3 entries','2026-02-15 02:33','<span class="anomaly">10.0.31.88</span>','success'],
+          ['5005','svc-admin-0312','audit_log_insert','2 fake entries','2026-02-15 02:34','<span class="anomaly">10.0.31.88</span>','success'],
+          ['5006','svc-admin-0312','attachment_purge','TK-0087,TK-0096,TK-0099','2026-02-15 02:38','<span class="anomaly">10.0.31.88</span>','success']
+        ],
+        analysis: '🔍 发现：svc-admin-0312 的所有操作都来自同一个 IP 地址 <strong>10.0.31.88</strong>。这个账号不仅修改了知识库，还<strong>删除并伪造了审计日志</strong>、清理了工单附件。下一步：查出这个 IP 和服务账号背后是谁。'
+      },
+      // 任务4：追踪幕后
+      'trace_operator': {
+        mission: 4,
+        columns: ['account_id','display_name','created_by','created_at','associated_employee','last_active'],
+        rows: [
+          ['svc-admin-0312','系统维护账号','<span class="anomaly">EMP-3127</span>','2026-02-13 22:30','<span class="anomaly">EMP-3127</span>','2026-02-15 02:38']
+        ],
+        analysis: null // 特殊处理
+      },
+      'emp_3127': {
+        mission: 4,
+        columns: ['emp_id','name','department','title','email','access_level'],
+        rows: [
+          ['EMP-3127','<span class="anomaly">梁志远</span>','运营部','<span class="anomaly">运营副总裁</span>','liangzy@hlz.com','<span class="anomaly">9 (最高)</span>']
+        ],
+        analysis: null
+      },
+      'ip_trace': {
+        mission: 4,
+        columns: ['ip_address','hostname','location','assigned_to','last_login'],
+        rows: [
+          ['10.0.31.88','VP-OPS-DESKTOP','<span class="anomaly">15F 运营副总裁办公室</span>','<span class="anomaly">EMP-3127 梁志远</span>','2026-02-15 02:20']
+        ],
+        analysis: null
+      }
+    };
+
+    let completedMissions = new Set();
+    let discoveryCount = 0;
+    let hintsUsed = {};
+
+    function renderSchema() {
+      document.getElementById('schema-list').innerHTML = schema.map(t => `
+        <div class="table-item" onclick="this.classList.toggle('active')">
+          <div class="tbl-name">📊 ${t.name}</div>
+          <div class="tbl-desc">${t.desc}</div>
+          <div class="table-cols">
+            ${t.cols.map(c => `<div class="col-item">${c.k ? `<span class="col-key">${c.k}</span> ` : ''}${c.n} <span style="color:var(--border)">${c.t}</span></div>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPresets() {
+      const presets = [
+        {id:'p1', label:'SELECT * FROM tickets WHERE ...', q:'SELECT ticket_id, user_name, subject, status, closed_by, close_reason, closed_at FROM tickets WHERE closed_by = \'HZ-7\' AND closed_at > \'2026-02-15 01:00\' ORDER BY closed_at'},
+        {id:'p2', label:'SELECT * FROM kb_versions WHERE ...', q:'SELECT * FROM kb_versions WHERE modified_by = \'svc-admin-0312\' ORDER BY modified_at'},
+        {id:'p3', label:'SELECT * FROM audit_operations WHERE ...', q:'SELECT * FROM audit_operations WHERE operator = \'svc-admin-0312\' ORDER BY timestamp'},
+        {id:'p4a', label:'SELECT * FROM service_accounts WHERE ...', q:'SELECT * FROM service_accounts WHERE account_id = \'svc-admin-0312\''},
+        {id:'p4b', label:'SELECT * FROM employees WHERE emp_id = ...', q:'SELECT * FROM employees WHERE emp_id = \'EMP-3127\''}
+      ];
+      document.getElementById('presets').innerHTML = presets.map(p => `
+        <div class="preset-q" id="preset-${p.id}" onclick="usePreset('${p.id}', \`${p.q}\`)">${p.label}</div>
+      `).join('');
+    }
+
+    function usePreset(id, query) {
+      document.getElementById('sql-input').value = query;
+      document.getElementById(`preset-${id}`).classList.add('used');
+    }
+
+    function showHint() {
+      const currentMission = getCurrentMission();
+      const hints = {
+        1: '试试查询 tickets 表中被 HZ-7 关闭的工单——筛选 closed_by = \'HZ-7\' 且 closed_at 在今晚的记录。',
+        2: '查询 kb_versions 表中被 svc-admin-0312 修改的条目——看看知识库在什么时候被篡改的。',
+        3: '查询 audit_operations 表中 svc-admin-0312 的所有操作——注意 IP 地址是否一致。',
+        4: '现在需要追踪 svc-admin-0312 的创建者——查询 service_accounts 表，然后用 emp_id 去 employees 表找到真人。'
+      };
+      Interactions.notify(`💡 ${hints[currentMission] || '先完成当前任务再继续'}`, 'info', 5000);
+    }
+
+    function getCurrentMission() {
+      for (let i = 1; i <= 4; i++) {
+        if (!completedMissions.has(i)) return i;
+      }
+      return 4;
+    }
+
+    function executeQuery() {
+      const sql = document.getElementById('sql-input').value.trim().toLowerCase();
+      const resultArea = document.getElementById('result-area');
+      const statusEl = document.getElementById('query-status');
+
+      if (!sql) {
+        resultArea.innerHTML = '<div class="result-msg result-error">请输入查询语句</div>';
+        return;
+      }
+
+      statusEl.textContent = '执行中...';
+      statusEl.style.color = 'var(--accent-blue)';
+
+      // 模拟延迟
+      setTimeout(() => {
+        let matched = null;
+
+        // 模糊匹配查询意图
+        if (sql.includes('tickets') && (sql.includes('hz-7') || sql.includes('closed_by') || sql.includes('closed_at'))) {
+          matched = queryResults['tickets_closed_night'];
+        } else if (sql.includes('kb_versions') && (sql.includes('svc-admin') || sql.includes('modified'))) {
+          matched = queryResults['kb_versions_recent'];
+        } else if (sql.includes('audit_operations') && sql.includes('svc-admin')) {
+          matched = queryResults['svc_admin_ops'];
+        } else if (sql.includes('service_accounts') && sql.includes('svc-admin')) {
+          matched = queryResults['trace_operator'];
+        } else if (sql.includes('employees') && sql.includes('emp-3127')) {
+          matched = queryResults['emp_3127'];
+        } else if (sql.includes('10.0.31.88') || (sql.includes('ip') && sql.includes('trace'))) {
+          matched = queryResults['ip_trace'];
+        } else if (sql.includes('tickets') && !sql.includes('hz-7')) {
+          // 通用工单查询
+          resultArea.innerHTML = `<div class="result-msg">返回 23 条记录。数据量太大。<br><br>💡 尝试添加更精确的 WHERE 条件，例如筛选特定的 closed_by 或时间范围。</div>`;
+          statusEl.textContent = '完成 — 结果需细化';
+          statusEl.style.color = 'var(--accent-orange)';
+          return;
+        }
+
+        if (!matched) {
+          resultArea.innerHTML = `<div class="result-msg result-error">❌ 查询未返回有效结果。<br><br>请检查表名和字段名是否正确，或尝试使用上方的快捷查询。</div>`;
+          statusEl.textContent = '无结果';
+          statusEl.style.color = 'var(--accent-red)';
+          if (typeof AudioEngine !== 'undefined') AudioEngine.playError();
+          return;
+        }
+
+        // 渲染结果表格
+        let html = `<div style="margin-bottom:8px;font-size:11px;color:var(--accent-green);">✅ 查询成功 — 返回 ${matched.rows.length} 条记录</div>`;
+        html += '<table class="result-table"><thead><tr>';
+        matched.columns.forEach(c => { html += `<th>${c}</th>`; });
+        html += '</tr></thead><tbody>';
+        matched.rows.forEach(r => {
+          html += '<tr>';
+          r.forEach(cell => { html += `<td>${cell}</td>`; });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        resultArea.innerHTML = html;
+        statusEl.textContent = `完成 — ${matched.rows.length} 条记录`;
+        statusEl.style.color = 'var(--accent-green)';
+
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playNotify();
+        NightAudit.addDbQuery(sql.substring(0, 50));
+
+        // 处理任务完成
+        if (matched.mission && !completedMissions.has(matched.mission)) {
+          completedMissions.add(matched.mission);
+          processMissionComplete(matched);
+        }
+
+        // 任务4的特殊处理（需要三个查询联合）
+        if (matched.mission === 4) {
+          checkMission4Complete();
+        }
+      }, 600);
+    }
+
+    let mission4Queries = new Set();
+    function checkMission4Complete() {
+      const sql = document.getElementById('sql-input').value.trim().toLowerCase();
+      if (sql.includes('service_accounts')) mission4Queries.add('svc');
+      if (sql.includes('employees') && sql.includes('emp-3127')) mission4Queries.add('emp');
+      if (sql.includes('10.0.31.88') || sql.includes('ip')) mission4Queries.add('ip');
+
+      if (mission4Queries.size >= 2) {
+        completedMissions.add(4);
+        addDiscovery(4, '🎯 <strong>身份确认</strong>：svc-admin-0312 由 EMP-3127 (梁志远) 在 2月13日深夜创建，IP 10.0.31.88 对应15楼运营副总裁办公室。数据库取证完成——铁证如山。');
+        NightAudit.addClue('DB-IDENTITY', { name: '数据库铁证', value: 'svc-admin-0312 → EMP-3127 → 梁志远（运营VP）→ IP: 15F VP办公室', source: 'P8-数据库取证' });
+        document.getElementById('m4').classList.add('done');
+        document.getElementById('m4').classList.remove('current');
+
+        setTimeout(() => showComplete(), 1500);
+      }
+    }
+
+    function processMissionComplete(matched) {
+      const missionEl = document.getElementById(`m${matched.mission}`);
+      missionEl.classList.add('done');
+      missionEl.classList.remove('current');
+
+      const nextM = document.getElementById(`m${matched.mission + 1}`);
+      if (nextM) nextM.classList.add('current');
+
+      if (matched.analysis) {
+        addDiscovery(matched.mission, matched.analysis);
+      }
+
+      const clueData = {
+        1: { id: 'DB-TICKETS', name: '工单异常关闭模式', value: '6条工单27分钟内被关闭，使用3种异常原因包括"威胁压制"', source: 'P8-数据库取证' },
+        2: { id: 'DB-KB', name: '知识库深夜篡改', value: 'svc-admin-0312深夜修改KB-4412并创建KB-9901(覆盖停止指令)，全部auto-approved', source: 'P8-数据库取证' },
+        3: { id: 'DB-OPS', name: '服务账号操作链', value: 'svc-admin-0312: 改知识库→删审计日志→伪造日志→清附件，全部来自IP 10.0.31.88', source: 'P8-数据库取证' }
+      };
+      if (clueData[matched.mission]) {
+        NightAudit.addClue(clueData[matched.mission].id, clueData[matched.mission]);
+      }
+    }
+
+    function addDiscovery(num, text) {
+      discoveryCount++;
+      const panel = document.getElementById('discovery-panel');
+      panel.classList.add('visible');
+      const div = document.createElement('div');
+      div.className = 'discovery-item';
+      div.innerHTML = `<strong>发现 #${discoveryCount}</strong>：${text}`;
+      panel.appendChild(div);
+      div.scrollIntoView({ behavior:'smooth' });
+
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playClue();
+      Interactions.notify(`🔍 发现 #${discoveryCount}`, 'clue', 2000);
+    }
+
+    function showComplete() {
+      NightAudit.set('dbForensicDone', true);
+      Interactions.notify('🗄️ 数据库取证完成！获得关键证据', 'success', 3000);
+
+      const completeDiv = document.createElement('div');
+      completeDiv.className = 'card fade-in';
+      completeDiv.style.marginTop = '20px';
+      completeDiv.innerHTML = `
+        <div class="alert alert-success">
+          <span class="alert-icon">✅</span>
+          <div>
+            <strong>数据库取证完成。</strong>通过 SQL 查询，你建立了从服务账号到真实人员的完整追踪链：<br>
+            <code>svc-admin-0312</code> → <code>EMP-3127</code> → <strong>梁志远（运营副总裁）</strong> → <code>10.0.31.88 (15F VP办公室)</code><br><br>
+            下一步：恢复被撤回的审批令牌，获取完整的系统快照。
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:12px;">
+          <button class="btn-primary proceed-btn-pulse" onclick="Navigation.goTo(9)">
+            🔑 进入权限恢复 →
+          </button>
+        </div>
+      `;
+      document.querySelector('.main-content').appendChild(completeDiv);
+      completeDiv.scrollIntoView({ behavior:'smooth' });
+    }
+
+    document.getElementById('sql-input').addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeQuery();
+    });
+
+    renderSchema();
+    renderPresets();
+  </script>
+</body>
+</html>
