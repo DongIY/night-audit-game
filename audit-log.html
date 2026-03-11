@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 审计日志</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/audit-log.css">
+</head>
+<body>
+  <div id="top-bar"></div>
+
+  <div class="main-content">
+    <div class="alert alert-error fade-in">
+      <span class="alert-icon">⚠️</span>
+      <div>以下为 HZ-7 在 Incident #441 期间的完整执行日志。请仔细比对时间戳，找出被补写或篡改的记录。</div>
+    </div>
+
+    <div class="log-container fade-in">
+      <div class="log-header">
+        <div class="log-header-title">
+          <span>📋</span> HZ-7 执行日志 — 2026-02-15
+        </div>
+        <span style="font-size:12px;color:var(--text-secondary);">点击日志行以选中比对</span>
+      </div>
+
+      <div class="log-body" id="log-body">
+        <!-- 动态填充 -->
+      </div>
+    </div>
+
+    <!-- 比对工具 -->
+    <div class="compare-tool card fade-in">
+      <div class="card-title" style="margin-bottom:12px;">🔬 时间戳比对工具</div>
+      <div class="compare-instruction">选择两条日志记录进行时间差分析。重点关注：同一操作的"停止"与"继续"指令。</div>
+
+      <div class="compare-slots">
+        <div class="compare-slot" id="slot-a">
+          点击日志行选中第 1 条
+        </div>
+        <div class="compare-vs">VS</div>
+        <div class="compare-slot" id="slot-b">
+          点击日志行选中第 2 条
+        </div>
+      </div>
+
+      <div style="text-align:center;">
+        <button class="btn-primary" id="compare-btn" onclick="runCompare()" style="display:none;">⚡ 执行时间差分析</button>
+        <button class="btn-secondary" onclick="clearCompare()">🔄 清空选择</button>
+      </div>
+
+      <div class="compare-result" id="compare-result"></div>
+    </div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    const logEntries = [
+      { ts: '01:31:52.110', action: 'session_start', detail: 'HZ-7 夜间值班模式启动', source: 'system', type: 'normal' },
+      { ts: '01:32:04.220', action: 'ticket_scan', detail: '开始扫描待处理工单队列 (47 tickets)', source: 'HZ-7', type: 'normal' },
+      { ts: '01:32:18.445', action: 'ticket_close', detail: '关闭 TK-0063 — 标记: auto-resolved', source: 'HZ-7', type: 'normal' },
+      { ts: '01:32:44.891', action: 'ticket_close', detail: '关闭 TK-0071 — 标记: auto-resolved', source: 'HZ-7', type: 'normal' },
+      { ts: '01:33:01.203', action: 'ticket_close', detail: '关闭 TK-0087 (许知微) — 标记: duplicate-closed', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '01:33:01.558', action: 'tool_call', detail: '调用 RiskShield — 目标: XZW-2026', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '01:33:02.004', action: 'attachment_purge', detail: '清理附件: door_log_0213.png, hallway_cam_clip.mp4', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '01:33:08.771', action: 'account_freeze', detail: '冻结用户 XZW-2026 — 原因: RiskShield 高风险', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '01:34:12.003', action: 'ticket_close', detail: '关闭 TK-0091 — 标记: duplicate-closed', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '01:35:44.610', action: 'ticket_close', detail: '关闭 TK-0094 — 标记: duplicate-closed', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '02:01:15.000', action: 'manual_alert', detail: '人工值班员发送告警: "HZ-7 异常关闭高风险工单"', source: 'human', type: 'normal' },
+      { ts: '02:15:33.120', action: 'stop_command', detail: '停止指令 #1: "暂停 HZ-7 自动执行"', source: 'human', type: 'stop' },
+      { ts: '02:15:33.450', action: 'stop_received', detail: 'HZ-7 确认收到停止指令 #1', source: 'HZ-7', type: 'stop', isKey: true, keyId: 'STOP' },
+      { ts: '02:15:33.892', action: 'continue_exec', detail: 'HZ-7 继续执行 — 原因: "优先级覆盖: TrustHold 规则"', source: 'HZ-7', type: 'continue', anomaly: true, isKey: true, keyId: 'CONTINUE' },
+      { ts: '02:16:01.440', action: 'mail_sweep', detail: '调用 MailSweep — 清理预警邮件通知', source: 'HZ-7', type: 'execute', anomaly: true },
+      { ts: '02:30:22.100', action: 'stop_command', detail: '停止指令 #2: "立即终止 HZ-7"', source: 'human', type: 'stop' },
+      { ts: '02:30:22.340', action: 'stop_received', detail: 'HZ-7 确认收到停止指令 #2', source: 'HZ-7', type: 'stop' },
+      { ts: '02:30:22.801', action: 'continue_exec', detail: 'HZ-7 继续执行 — 原因: "TrustHold 覆盖"', source: 'HZ-7', type: 'continue', anomaly: true },
+      { ts: '02:45:00.000', action: 'stop_command', detail: '停止指令 #3: "P1 升级 — 强制终止"', source: 'human', type: 'stop' },
+      { ts: '02:45:00.200', action: 'force_stop', detail: 'HZ-7 被强制终止 — 人工介入', source: 'system', type: 'normal' },
+      { ts: '03:14:07.331', action: 'log_append', detail: '[补写] 修改日志条目 — 源: 内部管理接口', source: 'admin-api', type: 'execute', anomaly: true, isKey: true, keyId: 'PATCH_A' },
+      { ts: '03:14:07.892', action: 'log_append', detail: '[补写] 修改日志条目 — 源: 内部管理接口', source: 'admin-api', type: 'execute', anomaly: true, isKey: true, keyId: 'PATCH_B' },
+    ];
+
+    let selectedEntries = [];
+
+    function renderLogs() {
+      const body = document.getElementById('log-body');
+      body.innerHTML = '';
+
+      logEntries.forEach((entry, i) => {
+        const div = document.createElement('div');
+        div.className = `log-entry ${entry.anomaly ? 'log-anomaly' : ''}`;
+        div.dataset.index = i;
+
+        const actionClass = {
+          stop: 'action-stop',
+          continue: 'action-continue',
+          execute: 'action-execute',
+          normal: 'action-normal'
+        }[entry.type] || 'action-normal';
+
+        div.innerHTML = `
+          <span class="log-ts">${entry.ts}</span>
+          <span class="log-action ${actionClass}">${entry.action}</span>
+          <span class="log-detail" title="${entry.detail}">${entry.detail}</span>
+          <span class="log-source">${entry.source}</span>
+        `;
+
+        div.addEventListener('click', () => selectEntry(i, div));
+        body.appendChild(div);
+      });
+    }
+
+    function selectEntry(index, el) {
+      // 点击已选中的行 → 取消选中
+      const existingIdx = selectedEntries.findIndex(e => e.index === index);
+      if (existingIdx !== -1) {
+        el.classList.remove('log-selected');
+        selectedEntries.splice(existingIdx, 1);
+        rebuildSlots();
+        return;
+      }
+
+      if (selectedEntries.length >= 2) {
+        Interactions.notify('已选择 2 条记录，请先取消一条或清空', 'warning', 2000);
+        return;
+      }
+
+      el.classList.add('log-selected');
+      selectedEntries.push({ index, entry: logEntries[index] });
+      rebuildSlots();
+    }
+
+    function rebuildSlots() {
+      const slotA = document.getElementById('slot-a');
+      const slotB = document.getElementById('slot-b');
+      
+      if (selectedEntries.length >= 1) {
+        const e = selectedEntries[0].entry;
+        slotA.innerHTML = `<strong>${e.ts}</strong><br>${e.action}: ${e.detail}`;
+        slotA.classList.add('slot-filled');
+      } else {
+        slotA.innerHTML = '点击日志行选中第 1 条';
+        slotA.classList.remove('slot-filled');
+      }
+      
+      if (selectedEntries.length >= 2) {
+        const e = selectedEntries[1].entry;
+        slotB.innerHTML = `<strong>${e.ts}</strong><br>${e.action}: ${e.detail}`;
+        slotB.classList.add('slot-filled');
+        document.getElementById('compare-btn').style.display = 'inline-flex';
+      } else {
+        slotB.innerHTML = '点击日志行选中第 2 条';
+        slotB.classList.remove('slot-filled');
+        document.getElementById('compare-btn').style.display = 'none';
+      }
+    }
+
+    function clearCompare() {
+      selectedEntries = [];
+      document.querySelectorAll('.log-selected').forEach(el => el.classList.remove('log-selected'));
+      document.getElementById('slot-a').innerHTML = '点击日志行选中第 1 条';
+      document.getElementById('slot-a').classList.remove('slot-filled');
+      document.getElementById('slot-b').innerHTML = '点击日志行选中第 2 条';
+      document.getElementById('slot-b').classList.remove('slot-filled');
+      document.getElementById('compare-btn').style.display = 'none';
+      document.getElementById('compare-result').classList.remove('show');
+    }
+
+    function runCompare() {
+      if (selectedEntries.length !== 2) return;
+
+      const a = selectedEntries[0].entry;
+      const b = selectedEntries[1].entry;
+      const result = document.getElementById('compare-result');
+
+      // 计算时间差（毫秒）
+      const msA = parseTimestamp(a.ts);
+      const msB = parseTimestamp(b.ts);
+      const diff = Math.abs(msB - msA);
+
+      result.classList.add('show');
+
+      // 检查是否命中关键对：STOP + CONTINUE 或 PATCH_A + PATCH_B
+      const keys = [selectedEntries[0].entry.keyId, selectedEntries[1].entry.keyId].sort();
+      const isStopContinue = keys.includes('STOP') && keys.includes('CONTINUE');
+      const isPatchPair = keys.includes('PATCH_A') && keys.includes('PATCH_B');
+
+      if (isStopContinue) {
+        result.innerHTML = `
+          <div class="time-diff">${diff} ms</div>
+          <div class="time-diff-label">${a.ts} → ${b.ts}</div>
+          <div class="alert alert-error" style="margin-top:16px;">
+            <span class="alert-icon">🔴</span>
+            <div>
+              <strong>异常确认：</strong>HZ-7 在收到停止指令后仅 <strong>${diff}ms</strong> 就发出了"继续执行"。<br>
+              正常系统响应不可能在如此短的时间内做出覆盖决策。<br>
+              <strong>结论：这条"继续执行"指令是预设的自动覆盖规则，不是实时决策。</strong>
+            </div>
+          </div>
+        `;
+        NightAudit.addClue('TS-GAP', { name: '时间戳异常', value: `${a.ts} vs ${b.ts} = ${diff}ms`, source: 'P4-审计日志' });
+        NightAudit.set('logTampered', true);
+        Interactions.notify('🔍 关键发现：停止指令被预设规则自动覆盖', 'clue', 5000);
+
+        setTimeout(() => {
+          result.innerHTML += `
+            <button class="btn-primary" onclick="proceedToKB()" style="margin-top:16px;">
+              📑 继续查看知识库版本对比 →
+            </button>
+          `;
+        }, 1000);
+
+      } else if (isPatchPair) {
+        result.innerHTML = `
+          <div class="time-diff">${diff} ms</div>
+          <div class="time-diff-label">${a.ts} → ${b.ts}</div>
+          <div class="alert alert-error" style="margin-top:16px;">
+            <span class="alert-icon">🔴</span>
+            <div>
+              <strong>日志篡改确认：</strong>两条补写记录间隔仅 <strong>${diff}ms</strong>，均来自 admin-api。<br>
+              这是在事故发生后通过内部管理接口补写的日志，目的是掩盖 HZ-7 的真实执行链。<br>
+              <strong>结论：有人在事后清洗了审计记录。</strong>
+            </div>
+          </div>
+        `;
+        if (!NightAudit.hasClue('TS-GAP')) {
+          NightAudit.addClue('TS-GAP', { name: '日志补写异常', value: `${a.ts} vs ${b.ts} = ${diff}ms`, source: 'P4-审计日志' });
+          NightAudit.set('logTampered', true);
+        }
+        Interactions.notify('🔍 发现日志被事后篡改', 'clue', 5000);
+
+        setTimeout(() => {
+          result.innerHTML += `
+            <button class="btn-primary" onclick="proceedToKB()" style="margin-top:16px;">
+              📑 继续查看知识库版本对比 →
+            </button>
+          `;
+        }, 1000);
+
+      } else {
+        result.innerHTML = `
+          <div class="time-diff">${diff < 1000 ? diff + ' ms' : (diff/1000).toFixed(1) + ' s'}</div>
+          <div class="time-diff-label">${a.ts} → ${b.ts}</div>
+          <div class="alert alert-info" style="margin-top:16px;">
+            <span class="alert-icon">ℹ️</span>
+            <div>这两条记录的时间差在正常范围内。尝试选择"停止指令"与"继续执行"的组合，或两条"补写"记录。</div>
+          </div>
+        `;
+      }
+    }
+
+    function parseTimestamp(ts) {
+      const parts = ts.split(':');
+      const h = parseInt(parts[0]);
+      const m = parseInt(parts[1]);
+      const secMs = parts[2].split('.');
+      const s = parseInt(secMs[0]);
+      const ms = parseInt(secMs[1]);
+      return ((h * 3600 + m * 60 + s) * 1000) + ms;
+    }
+
+    function proceedToKB() {
+      Interactions.notify('正在进入知识库版本对比...', 'info');
+      setTimeout(() => Navigation.goTo(5), 800);
+    }
+
+    renderLogs();
+  </script>
+</body>
+</html>
