@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 监控回放</title>
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .surv-header{text-align:center;margin-bottom:24px}
+    .surv-header h2{font-size:20px;color:var(--text-primary);margin-bottom:6px}
+    .surv-header p{font-size:13px;color:var(--text-secondary)}
+    .timeline-master{position:relative;padding:0 20px;margin-bottom:24px}
+    .timeline-ruler{display:flex;justify-content:space-between;padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:4px}
+    .timeline-ruler span{font-size:10px;color:var(--text-secondary);font-family:var(--font-mono)}
+    .timeline-tracks{position:relative}
+    .track{display:flex;align-items:center;margin-bottom:6px;min-height:36px}
+    .track-label{width:100px;font-size:11px;color:var(--text-secondary);flex-shrink:0;text-align:right;padding-right:10px}
+    .track-bar{flex:1;height:36px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);position:relative;overflow:hidden}
+    .track-event{position:absolute;top:4px;bottom:4px;border-radius:3px;cursor:pointer;transition:all var(--transition-fast);display:flex;align-items:center;padding:0 6px;font-size:10px;white-space:nowrap;overflow:hidden}
+    .track-event:hover{filter:brightness(1.3);z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.4)}
+    .track-event.selected{outline:2px solid #fff;z-index:11}
+    .ev-access{background:rgba(58,123,213,0.6);color:#fff}
+    .ev-anomaly{background:rgba(231,76,60,0.6);color:#fff}
+    .ev-normal{background:rgba(39,174,96,0.4);color:#fff}
+    .ev-absent{background:rgba(107,125,147,0.3);color:var(--text-secondary)}
+
+    .detail-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    @media(max-width:768px){.detail-split{grid-template-columns:1fr}}
+
+    .cam-viewer{background:#0a0e14;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;min-height:300px;position:relative}
+    .cam-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .cam-header .cam-title{font-size:12px;color:var(--accent-blue);font-family:var(--font-mono)}
+    .cam-header .cam-time{font-size:11px;color:var(--accent-gold);font-family:var(--font-mono)}
+    .cam-frame{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;min-height:200px;font-size:13px;line-height:1.7}
+    .cam-frame .person-tag{display:inline-block;padding:2px 8px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;margin:0 2px}
+    .person-liang{background:rgba(231,76,60,0.2);color:var(--accent-red)}
+    .person-lin{background:rgba(230,126,34,0.2);color:var(--accent-orange)}
+    .person-zhao{background:rgba(58,123,213,0.2);color:var(--accent-blue)}
+    .person-zhou{background:rgba(39,174,96,0.2);color:var(--accent-green)}
+    .cam-overlay{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
+    .scanline{position:absolute;width:100%;height:2px;background:rgba(58,123,213,0.1);animation:scanDown 4s linear infinite}
+    @keyframes scanDown{0%{top:0}100%{top:100%}}
+    .rec-dot{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:4px;font-size:10px;color:var(--accent-red)}
+    .rec-dot::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent-red);animation:pulse-dot 1.5s ease infinite}
+
+    .alibi-panel{min-height:300px}
+    .alibi-card{padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:8px;font-size:13px}
+    .alibi-card .alibi-name{font-weight:600;margin-bottom:4px}
+    .alibi-card .alibi-claim{color:var(--text-secondary);font-style:italic;margin-bottom:6px}
+    .alibi-card .alibi-verdict{font-size:12px}
+    .verdict-lie{color:var(--accent-red);font-weight:600}
+    .verdict-truth{color:var(--accent-green)}
+    .verdict-unknown{color:var(--text-secondary)}
+    .alibi-btn{padding:4px 10px;font-size:11px;margin-top:4px}
+
+    .contradiction-panel{margin-top:16px;display:none}
+    .contradiction-panel.visible{display:block}
+    .contradiction{padding:14px;background:rgba(231,76,60,0.05);border:1px solid rgba(231,76,60,0.2);border-left:3px solid var(--accent-red);border-radius:0 var(--radius-md) var(--radius-md) 0;margin-bottom:10px;font-size:13px}
+    .contradiction strong{color:var(--accent-red)}
+
+    .final-verdict{margin-top:20px;display:none}
+    .final-verdict.visible{display:block}
+    .verdict-q{margin-bottom:16px}
+    .verdict-q h4{font-size:14px;color:var(--accent-blue);margin-bottom:8px}
+    .verdict-options{display:flex;flex-direction:column;gap:8px}
+    .verdict-opt{padding:10px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer;font-size:13px;transition:all var(--transition-fast)}
+    .verdict-opt:hover{border-color:var(--accent-blue)}
+    .verdict-opt.correct{border-color:var(--accent-green);background:rgba(39,174,96,0.1);color:var(--accent-green)}
+    .verdict-opt.wrong{border-color:var(--accent-red);background:rgba(231,76,60,0.1)}
+
+    .progress-bar{height:4px;background:var(--bg-input);border-radius:2px;margin-bottom:16px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--accent-blue);border-radius:2px;transition:width 0.5s ease}
+  </style>
+</head>
+<body>
+  <div id="top-bar"></div>
+  <div class="main-content">
+    <div class="surv-header fade-in">
+      <h2>📹 门禁与监控回放系统</h2>
+      <p>Helpline Zero 总部的门禁和走廊监控记录了关键时间段内所有人员活动。<br>
+      通过回放监控片段，交叉验证嫌疑人的不在场证词——找出谁在说谎。</p>
+    </div>
+
+    <div class="progress-bar fade-in"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="alert alert-warning fade-in">
+      <span class="alert-icon">📌</span>
+      <div><strong>任务：</strong>点击时间轴上的事件片段查看监控记录，然后与每个人的证词进行比对——找出矛盾。</div>
+    </div>
+
+    <!-- 时间轴 -->
+    <div class="card fade-in">
+      <div class="card-header"><span class="card-title">⏱️ 活动时间轴 (2026-02-15 凌晨)</span></div>
+      <div class="timeline-master">
+        <div class="timeline-ruler">
+          <span>22:00</span><span>23:00</span><span>00:00</span><span>01:00</span><span>02:00</span><span>03:00</span>
+        </div>
+        <div class="timeline-tracks" id="timeline-tracks"></div>
+      </div>
+    </div>
+
+    <!-- 详情区 -->
+    <div class="detail-split">
+      <div class="cam-viewer card fade-in" id="cam-viewer">
+        <div class="cam-header">
+          <span class="cam-title" id="cam-title">CAM — 待选择</span>
+          <span class="cam-time" id="cam-time">--:--</span>
+        </div>
+        <div class="cam-frame" id="cam-frame">
+          <p style="color:var(--text-secondary);text-align:center;padding:40px 0;">
+            点击上方时间轴中的事件片段<br>查看监控录像
+          </p>
+        </div>
+        <div class="cam-overlay"><div class="scanline"></div><div class="rec-dot">REC</div></div>
+      </div>
+
+      <div class="alibi-panel card fade-in">
+        <div class="card-header"><span class="card-title">📝 不在场证词</span></div>
+        <div id="alibi-list"></div>
+      </div>
+    </div>
+
+    <div class="contradiction-panel" id="contradiction-panel"></div>
+    <div class="final-verdict" id="final-verdict"></div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    // 时间轴事件（5小时 = 300分钟，每分钟约0.33%宽度）
+    const timeBase = new Date('2026-02-15T22:00:00').getTime();
+    function timeToPercent(h, m) { return ((h - 22) * 60 + m) / 300 * 100; }
+
+    const tracks = [
+      { label: '梁志远', person: 'liang', events: [
+        { start:[22,30], end:[23,0], type:'normal', cam:'cam-lobby-1', desc:'22:30 大堂门禁：刷卡进入大楼（正常）', detail:'<span class="person-tag person-liang">梁志远</span> 刷卡通过大堂闸机进入办公楼。手持笔记本电脑包，步伐匆忙。<br><br>⚠️ 注意：他的正常下班时间是 18:00，深夜返回大楼不寻常。' },
+        { start:[23,45], end:[0,15], type:'anomaly', cam:'cam-15f-corridor', desc:'23:45-00:15 15F走廊：进入VP办公室', detail:'<span class="person-tag person-liang">梁志远</span> 从电梯出来，沿走廊走向 VP 办公室（15F-1502）。打开办公室门后，<strong>走廊监控可以看到办公室内电脑屏幕亮起</strong>。<br><br>⚠️ 与数据库日志比对：svc-admin-0312 的首次知识库修改操作（23:47）发生在他进入办公室 2 分钟后。IP 地址 10.0.31.88 归属此办公室。' },
+        { start:[2,15], end:[2,45], type:'anomaly', cam:'cam-15f-corridor-2', desc:'02:15-02:45 15F走廊：深夜仍在办公室', detail:'<span class="person-tag person-liang">梁志远</span> 办公室门半开，可以看到他坐在电脑前操作。走廊的饮水机显示他期间出来接了两次水。<br><br>⚠️ 此时段恰好是 svc-admin-0312 执行审计日志删除（02:33）、伪造日志（02:34）和附件清理（02:38）的时间。' },
+        { start:[2,50], end:[3,5], type:'normal', cam:'cam-lobby-2', desc:'02:50 大堂门禁：刷卡离开大楼', detail:'<span class="person-tag person-liang">梁志远</span> 刷卡通过大堂闸机离开办公楼。<br><br>离开时间 02:50 — 恰好在 svc-admin-0312 的最后一次操作（02:38 附件清理）完成 12 分钟后。' }
+      ]},
+      { label: '林昊', person: 'lin', events: [
+        { start:[22,0], end:[22,30], type:'normal', cam:'cam-parking', desc:'22:00 停车场：驾车进入', detail:'<span class="person-tag person-lin">林昊</span> 驾驶白色轿车进入 B2 停车场。<br><br>注意：他的正常下班时间也是 18:00。' },
+        { start:[22,35], end:[23,10], type:'normal', cam:'cam-12f', desc:'22:35 12F：进入供应链部办公室', detail:'<span class="person-tag person-lin">林昊</span> 在 12F 供应链管理部办公室，使用电脑操作。<br><br>⚠️ 邮件服务器日志显示：22:40-23:05 期间，有 8 封与深圳锐安科技的往来邮件从林昊的邮箱被永久删除。' },
+        { start:[23,15], end:[23,40], type:'anomaly', cam:'cam-elevator', desc:'23:15 电梯：上至15F', detail:'<span class="person-tag person-lin">林昊</span> 从 12F 乘电梯上至 <strong>15F</strong>。<br><br>⚠️ 林昊的工位在12F，15F是管理层楼层。他没有15F的常规门禁权限——但记录显示他使用了<strong>临时访客码</strong>通过了15F的门禁。这个访客码的审批人是梁志远。' },
+        { start:[0,30], end:[0,45], type:'normal', cam:'cam-lobby-3', desc:'00:30 大堂：刷卡离开', detail:'<span class="person-tag person-lin">林昊</span> 于 00:30 刷卡离开大楼。比梁志远早 2 个多小时离开。' }
+      ]},
+      { label: '赵锐', person: 'zhao', events: [
+        { start:[1,30], end:[1,45], type:'normal', cam:'cam-soc', desc:'01:30 SOC监控室：值班', detail:'<span class="person-tag person-zhao">赵锐</span> 在安全运营中心（SOC）监控室值班。屏幕上可以看到他在查看 HZ-7 的异常告警面板。<br><br>✅ 这与他的证词一致——他是第一个发现 HZ-7 异常的人。' },
+        { start:[1,50], end:[2,10], type:'normal', cam:'cam-soc-2', desc:'01:50 SOC：打电话', detail:'<span class="person-tag person-zhao">赵锐</span> 在 SOC 监控室内拨打电话。通话持续约 15 分钟。<br><br>✅ 时间与通话记录一致——他在 01:52 拨打了值班主管和 P1 事故响应热线。' }
+      ]},
+      { label: '周薇', person: 'zhou', events: [
+        { start:[0,0], end:[0,30], type:'normal', cam:'cam-qa-lab', desc:'00:00 质量部实验室：加班', detail:'<span class="person-tag person-zhou">周薇</span> 在质量部实验室工作，桌面上有 AX13 门锁样品。<br><br>✅ 她的加班记录确认了这一点——她在做 AX13 的追加安全测试。' },
+        { start:[0,35], end:[0,50], type:'normal', cam:'cam-lobby-4', desc:'00:35 大堂：刷卡离开', detail:'<span class="person-tag person-zhou">周薇</span> 于 00:35 离开大楼。<br><br>✅ 她在 HZ-7 异常行为开始（01:31）之前一个小时就已离开，与事故无关。' }
+      ]}
+    ];
+
+    const alibis = [
+      { person:'liang', name:'梁志远', claim:'我昨晚一直在家。公司的事我是今早被电话叫醒才知道的。深夜那段时间我在睡觉。', status:'unknown' },
+      { person:'lin', name:'林昊', claim:'我昨晚确实回了趟公司，大概10点到12点之间，处理一些供应链的文件工作。我全程在12楼自己的工位，没去过其他楼层。', status:'unknown' },
+      { person:'zhao', name:'赵锐', claim:'我是夜班值班员，全程在SOC监控室。大约凌晨1点半发现HZ-7异常，立刻上报了。', status:'unknown' },
+      { person:'zhou', name:'周薇', claim:'我昨晚加班到12点多，在质量部实验室做AX13的补充测试。之后就回家了。', status:'unknown' }
+    ];
+
+    let viewedEvents = new Set();
+    let contradictions = [];
+    let selectedEvent = null;
+
+    function renderTimeline() {
+      const container = document.getElementById('timeline-tracks');
+      container.innerHTML = tracks.map(track => {
+        const eventsHTML = track.events.map((ev, i) => {
+          const left = timeToPercent(ev.start[0], ev.start[1]);
+          const right = timeToPercent(ev.end[0], ev.end[1]);
+          const width = right - left;
+          const evId = `${track.person}-${i}`;
+          return `<div class="track-event ev-${ev.type} ${selectedEvent === evId ? 'selected' : ''}" 
+                       style="left:${left}%;width:${width}%;" 
+                       onclick="viewEvent('${track.person}',${i},'${evId}')"
+                       title="${ev.desc}">${ev.desc.split('：')[0]}</div>`;
+        }).join('');
+        return `<div class="track">
+          <div class="track-label">${track.label}</div>
+          <div class="track-bar">${eventsHTML}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function viewEvent(person, idx, evId) {
+      const track = tracks.find(t => t.person === person);
+      const ev = track.events[idx];
+      selectedEvent = evId;
+
+      document.getElementById('cam-title').textContent = `CAM — ${ev.cam}`;
+      document.getElementById('cam-time').textContent = `${String(ev.start[0]).padStart(2,'0')}:${String(ev.start[1]).padStart(2,'0')}`;
+      document.getElementById('cam-frame').innerHTML = ev.detail;
+
+      viewedEvents.add(evId);
+      NightAudit.addTimelineEvent(evId);
+      updateProgress();
+      renderTimeline();
+
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playNotify();
+
+      // 检查是否发现矛盾
+      checkContradictions();
+    }
+
+    function renderAlibis() {
+      document.getElementById('alibi-list').innerHTML = alibis.map(a => `
+        <div class="alibi-card" id="alibi-${a.person}">
+          <div class="alibi-name"><span class="person-tag person-${a.person}">${a.name}</span></div>
+          <div class="alibi-claim">"${a.claim}"</div>
+          <div class="alibi-verdict" id="verdict-${a.person}">
+            <span class="verdict-unknown">⬜ 待验证</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function checkContradictions() {
+      // 梁志远：说"一直在家"，但监控显示他22:30进入大楼，02:50离开
+      if (viewedEvents.has('liang-0') && !contradictions.includes('liang-home')) {
+        contradictions.push('liang-home');
+        addContradiction('梁志远说"昨晚一直在家"，但大堂监控显示他 <strong>22:30 刷卡进入大楼</strong>。他在撒谎。');
+        document.getElementById('verdict-liang').innerHTML = '<span class="verdict-lie">🔴 证词与监控矛盾 — 谎言</span>';
+        NightAudit.addClue('SURV-LIANG-LIE', { name: '梁志远说谎', value: '声称一直在家，但监控显示22:30-02:50在公司', source: 'P12-监控回放' });
+      }
+
+      // 梁志远：办公室操作时间与svc-admin-0312操作时间完全吻合
+      if (viewedEvents.has('liang-1') && !contradictions.includes('liang-timing')) {
+        contradictions.push('liang-timing');
+        addContradiction('梁志远 23:45 进入VP办公室，<strong>23:47 svc-admin-0312 开始修改知识库</strong>——仅差2分钟。操作IP 10.0.31.88 正是该办公室的设备。时间和地点完美吻合。');
+      }
+
+      // 林昊：说"没去过其他楼层"，但监控显示他23:15去了15F
+      if (viewedEvents.has('lin-2') && !contradictions.includes('lin-floor')) {
+        contradictions.push('lin-floor');
+        addContradiction('林昊说"全程在12楼，没去过其他楼层"，但电梯监控显示他 <strong>23:15 乘电梯上至15F</strong>，使用了梁志远审批的临时访客码。他也在撒谎。');
+        document.getElementById('verdict-lin').innerHTML = '<span class="verdict-lie">🔴 证词与监控矛盾 — 谎言（部分）</span>';
+        NightAudit.addClue('SURV-LIN-LIE', { name: '林昊说谎', value: '声称没离开12F，但监控显示23:15去了15F（梁志远办公室楼层）', source: 'P12-监控回放' });
+      }
+
+      // 赵锐和周薇——证词一致
+      if (viewedEvents.has('zhao-0') && !contradictions.includes('zhao-ok')) {
+        contradictions.push('zhao-ok');
+        document.getElementById('verdict-zhao').innerHTML = '<span class="verdict-truth">✅ 证词与监控一致</span>';
+      }
+      if (viewedEvents.has('zhou-0') && !contradictions.includes('zhou-ok')) {
+        contradictions.push('zhou-ok');
+        document.getElementById('verdict-zhou').innerHTML = '<span class="verdict-truth">✅ 证词与监控一致 — 事故前已离开</span>';
+      }
+
+      updateProgress();
+
+      // 当发现关键矛盾后显示最终判断
+      if (contradictions.includes('liang-home') && contradictions.includes('lin-floor') && contradictions.length >= 4) {
+        setTimeout(() => showFinalVerdict(), 1500);
+      }
+    }
+
+    function addContradiction(text) {
+      const panel = document.getElementById('contradiction-panel');
+      panel.classList.add('visible');
+      const div = document.createElement('div');
+      div.className = 'contradiction fade-in';
+      div.innerHTML = `⚡ <strong>矛盾发现</strong>：${text}`;
+      panel.appendChild(div);
+      div.scrollIntoView({ behavior:'smooth' });
+
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playClue();
+      Interactions.notify('⚡ 发现证词矛盾！', 'clue', 2000);
+    }
+
+    function updateProgress() {
+      const total = tracks.reduce((s, t) => s + t.events.length, 0);
+      const pct = Math.min((viewedEvents.size / total) * 70 + (contradictions.length / 5) * 30, 100);
+      document.getElementById('progress-fill').style.width = pct + '%';
+    }
+
+    function showFinalVerdict() {
+      const panel = document.getElementById('final-verdict');
+      if (panel.classList.contains('visible')) return;
+      panel.classList.add('visible');
+
+      panel.innerHTML = `
+        <div class="card fade-in">
+          <div class="card-header"><span class="card-title">⚖️ 最终判断</span></div>
+
+          <div class="verdict-q">
+            <h4>根据监控证据，以下哪个结论最准确？</h4>
+            <div class="verdict-options" id="final-options">
+              <div class="verdict-opt" onclick="submitVerdict(this, false)">
+                A. 梁志远和林昊都是独立行动的，各自有不同的目的
+              </div>
+              <div class="verdict-opt" onclick="submitVerdict(this, true)">
+                B. 梁志远是主谋，林昊是从犯——林昊深夜上15F是去梁志远办公室接受指示
+              </div>
+              <div class="verdict-opt" onclick="submitVerdict(this, false)">
+                C. 赵锐故意推迟上报，给梁志远争取了时间
+              </div>
+              <div class="verdict-opt" onclick="submitVerdict(this, false)">
+                D. 监控证据不足以确定谁是主谋
+              </div>
+            </div>
+            <div class="form-hint" id="verdict-hint"></div>
+          </div>
+        </div>
+      `;
+      panel.scrollIntoView({ behavior:'smooth' });
+    }
+
+    function submitVerdict(el, isCorrect) {
+      const options = document.querySelectorAll('#final-options .verdict-opt');
+      const hint = document.getElementById('verdict-hint');
+
+      if (isCorrect) {
+        el.classList.add('correct');
+        options.forEach(o => { if (o !== el) o.style.pointerEvents = 'none'; });
+        hint.textContent = '✅ 正确！林昊23:15上至15F的时间点，恰好在梁志远23:45开始操作svc-admin-0312之前——他们在办公室会面后，梁志远才开始执行攻击。林昊的角色是面对面接受指示的从犯。';
+        hint.style.color = 'var(--accent-green)';
+
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playSuccess();
+        NightAudit.addClue('SURV-CONCLUSION', { name: '监控结论', value: '梁志远=主谋（深夜操控svc-admin），林昊=从犯（上15F接受当面指示）', source: 'P12-监控回放' });
+        NightAudit.set('timelineBuilt', true);
+
+        Interactions.notify('📹 监控回放分析完成！', 'success', 3000);
+
+        setTimeout(() => {
+          const completeDiv = document.createElement('div');
+          completeDiv.className = 'card fade-in';
+          completeDiv.style.marginTop = '16px';
+          completeDiv.innerHTML = `
+            <div class="alert alert-success">
+              <span class="alert-icon">✅</span>
+              <div>
+                <strong>监控分析完成。</strong>你通过交叉验证证词和监控记录，确认了：<br>
+                • 梁志远 — <strong>主谋</strong>，全程在15F办公室远程操控 svc-admin-0312<br>
+                • 林昊 — <strong>从犯</strong>，深夜到15F接受当面指示后删除供应链证据<br>
+                • 赵锐/周薇 — 证词属实，与事件无关<br><br>
+                现在进入服务器终端，获取最后的直接证据。
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:12px;">
+              <button class="btn-primary proceed-btn-pulse" onclick="Navigation.goTo(13)">
+                💻 进入服务器终端 →
+              </button>
+            </div>
+          `;
+          document.querySelector('.main-content').appendChild(completeDiv);
+          completeDiv.scrollIntoView({ behavior:'smooth' });
+        }, 1000);
+      } else {
+        el.classList.add('wrong');
+        setTimeout(() => el.classList.remove('wrong'), 800);
+        hint.textContent = '❌ 再想想——仔细对比时间线上的事件顺序和每个人的行为模式';
+        hint.style.color = 'var(--accent-red)';
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playError();
+      }
+    }
+
+    renderTimeline();
+    renderAlibis();
+  </script>
+</body>
+</html>
