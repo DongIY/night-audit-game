@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — 邮件考古</title>
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    .email-forensics-header { text-align:center; margin-bottom:24px; }
+    .email-forensics-header h2 { font-size:20px; color:var(--text-primary); margin-bottom:6px; }
+    .email-forensics-header p { font-size:13px; color:var(--text-secondary); }
+
+    .recovery-panel { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+    @media(max-width:768px) { .recovery-panel { grid-template-columns:1fr; } }
+
+    .fragment-pool { min-height:300px; }
+    .fragment-pool .card-title { color:var(--accent-orange); }
+    .reconstruction-zone { min-height:300px; }
+    .reconstruction-zone .card-title { color:var(--accent-green); }
+
+    .email-fragment {
+      background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md);
+      padding:12px 14px; margin-bottom:8px; cursor:pointer;
+      transition:all var(--transition-fast); position:relative; font-size:13px;
+    }
+    .email-fragment:hover { border-color:var(--accent-blue); transform:translateX(4px); }
+    .email-fragment.placed { opacity:0.3; pointer-events:none; }
+    .email-fragment.wrong { border-color:var(--accent-red); animation:shake 0.4s ease; }
+    .email-fragment .frag-header { font-size:11px; color:var(--text-secondary); margin-bottom:4px; display:flex; justify-content:space-between; }
+    .email-fragment .frag-body { color:var(--text-primary); line-height:1.5; }
+    .email-fragment .frag-tag {
+      display:inline-block; padding:2px 6px; border-radius:var(--radius-sm);
+      font-size:10px; font-weight:600;
+    }
+    .frag-tag-from { background:rgba(58,123,213,0.15); color:var(--accent-blue); }
+    .frag-tag-to { background:rgba(39,174,96,0.15); color:var(--accent-green); }
+    .frag-tag-time { background:rgba(243,156,18,0.15); color:var(--accent-gold); }
+    .frag-tag-corrupt { background:rgba(231,76,60,0.15); color:var(--accent-red); }
+
+    .timeline-slot {
+      background:var(--bg-input); border:2px dashed var(--border); border-radius:var(--radius-md);
+      padding:14px; margin-bottom:8px; min-height:60px;
+      transition:all var(--transition-fast); position:relative;
+    }
+    .timeline-slot.active { border-color:var(--accent-blue); border-style:solid; background:rgba(58,123,213,0.05); }
+    .timeline-slot.filled { border-color:var(--accent-green); border-style:solid; background:rgba(39,174,96,0.05); }
+    .timeline-slot.wrong-slot { border-color:var(--accent-red); border-style:solid; }
+    .slot-label { font-size:11px; color:var(--text-secondary); margin-bottom:4px; }
+    .slot-hint { font-size:12px; color:var(--text-secondary); font-style:italic; }
+    .slot-content { font-size:13px; color:var(--text-primary); }
+    .slot-number { position:absolute; top:8px; right:12px; font-size:18px; font-weight:700; color:rgba(58,123,213,0.2); }
+
+    .chain-analysis { margin-top:20px; display:none; }
+    .chain-analysis.visible { display:block; }
+    .analysis-step { padding:12px 16px; border-left:3px solid var(--accent-blue); background:var(--bg-input); margin-bottom:8px; border-radius:0 var(--radius-md) var(--radius-md) 0; font-size:13px; animation:slideUp 0.4s ease; }
+    .analysis-step strong { color:var(--accent-gold); }
+
+    .question-panel { margin-top:20px; display:none; }
+    .question-panel.visible { display:block; }
+    .question-card { background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; margin-bottom:16px; }
+    .question-card h4 { font-size:15px; margin-bottom:12px; color:var(--accent-blue); }
+    .question-card p { font-size:13px; color:var(--text-secondary); margin-bottom:12px; }
+    .answer-options { display:flex; flex-direction:column; gap:8px; }
+    .answer-option {
+      padding:10px 14px; background:var(--bg-input); border:1px solid var(--border);
+      border-radius:var(--radius-md); cursor:pointer; font-size:13px;
+      transition:all var(--transition-fast);
+    }
+    .answer-option:hover { border-color:var(--accent-blue); background:rgba(58,123,213,0.05); }
+    .answer-option.correct { border-color:var(--accent-green); background:rgba(39,174,96,0.1); color:var(--accent-green); }
+    .answer-option.incorrect { border-color:var(--accent-red); background:rgba(231,76,60,0.1); color:var(--accent-red); }
+    .answer-option.disabled { pointer-events:none; opacity:0.5; }
+
+    .progress-bar { height:4px; background:var(--bg-input); border-radius:2px; margin-bottom:16px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--accent-blue); border-radius:2px; transition:width 0.5s ease; }
+
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+  </style>
+</head>
+<body>
+  <div id="top-bar"></div>
+
+  <div class="main-content">
+    <div class="email-forensics-header fade-in">
+      <h2>📧 邮件服务器回收站 — 碎片恢复</h2>
+      <p>事故发生后 37 分钟内，有人从 5 个邮箱中批量删除了 14 封内部邮件。<br>
+      邮件服务器的回收站保留了碎片，但顺序已被打乱且部分内容损坏。</p>
+    </div>
+
+    <div class="progress-bar fade-in">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="alert alert-warning fade-in">
+      <span class="alert-icon">📌</span>
+      <div>
+        <strong>任务：</strong>将左侧的邮件碎片按时间顺序拖入右侧的时间线槽位。<br>
+        注意阅读碎片内容中的线索来推断正确顺序——日期、回复关系、上下文引用都是关键。
+      </div>
+    </div>
+
+    <div class="recovery-panel">
+      <div class="fragment-pool card fade-in">
+        <div class="card-header">
+          <span class="card-title">📂 碎片池（未排序）</span>
+          <span class="tag tag-orange" id="remaining-count">6 个碎片</span>
+        </div>
+        <div id="fragment-list"></div>
+      </div>
+
+      <div class="reconstruction-zone card fade-in">
+        <div class="card-header">
+          <span class="card-title">📋 邮件时间线（请按顺序排列）</span>
+          <span class="tag tag-blue" id="placed-count">0/6</span>
+        </div>
+        <div id="timeline-slots"></div>
+      </div>
+    </div>
+
+    <div class="chain-analysis" id="chain-analysis"></div>
+
+    <div class="question-panel" id="question-panel"></div>
+  </div>
+
+  <div id="bottom-bar"></div>
+
+  <script src="js/game-state.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    // 6个邮件碎片——乱序展示，玩家需要通过内容推理正确顺序
+    const fragments = [
+      {
+        id: 'f3',
+        correctSlot: 2, // 第3封
+        from: '林昊 (linhao@hlz.com)',
+        to: '梁志远 (liangzy@hlz.com)',
+        time: '████-██-██ 16:22', // 时间被损坏
+        subject: 'Re: Re: AX13 第三方检测结果',
+        body: '志远，按你说的，我已经让测试团队把报告里"可远程生成临时口令"那段标注为"理论风险，暂不处理"。但老实说，如果用户真的遇到了这个问题并且有技术能力复现……我建议至少做一个静默修复。',
+        tags: ['回复链第3层', '提到了"按你说的"'],
+        corrupt: false
+      },
+      {
+        id: 'f1',
+        correctSlot: 0, // 第1封
+        from: '质量部自动通知 (qa-bot@hlz.com)',
+        to: '梁志远 (liangzy@hlz.com); 林昊 (linhao@hlz.com)',
+        time: '2026-01-24 09:15',
+        subject: 'AX13 批次第三方安全检测异常 — 需处理',
+        body: '系统自动通知：AX13-Batch-2025Q4 批次的第三方安全检测报告（编号 SR-20260124-AX13）发现1项高危漏洞：门锁固件允许通过API直接请求生成临时口令，无需物理验证。按公司规程，此类漏洞需在72小时内响应。请相关负责人确认处置方案。',
+        tags: ['系统自动通知', '最早的日期 01-24'],
+        corrupt: false
+      },
+      {
+        id: 'f5',
+        correctSlot: 4, // 第5封
+        from: '梁志远 (liangzy@hlz.com)',
+        to: '林昊 (linhao@hlz.com)',
+        time: '████-██-██ ██:██',
+        subject: '紧急：有人投诉了',
+        body: '林昊，刚收到客服系统预警，有个叫许知微的用户连续提交了门锁异常投诉，而且她附上了详细的技术描述——和检测报告里的漏洞一模一样。必须立刻处理。我已经安排用 svc-admin-0312 修改 HZ-7 的知识库规则，让系统自动把她的工单标为"重复投诉"并关闭。你确保供应链那边的文件也清理干净。',
+        tags: ['提到许知微', '提到 svc-admin-0312'],
+        corrupt: true
+      },
+      {
+        id: 'f2',
+        correctSlot: 1, // 第2封
+        from: '梁志远 (liangzy@hlz.com)',
+        to: '林昊 (linhao@hlz.com)',
+        time: '2026-01-24 14:33',
+        subject: 'Re: AX13 第三方检测结果',
+        body: '这份报告不能按正常流程走。AX13 上季度出货量 3200 台，如果触发召回，直接损失超过 800 万。我的意思是——先压一压，等 Q1 营收数据出来再说。你去跟测试团队沟通，把报告的措辞软化一下。',
+        tags: ['回复第1封', '日期 01-24 14:33'],
+        corrupt: false
+      },
+      {
+        id: 'f6',
+        correctSlot: 5, // 第6封
+        from: '林昊 (linhao@hlz.com)',
+        to: '梁志远 (liangzy@hlz.com)',
+        time: '████-██-██ ██:██',
+        subject: 'Re: 紧急：有人投诉了',
+        body: '明白，供应链这边我来处理。但如果这个用户真的去找媒体……我们需要一个备案。另外，你让 HZ-7 自动关单这事，审计日志会留记录的——建议也清一下。我先把跟深圳供应商的那几封往来邮件删了。',
+        tags: ['回复"紧急"邮件', '提到清理审计日志'],
+        corrupt: true
+      },
+      {
+        id: 'f4',
+        correctSlot: 3, // 第4封
+        from: '梁志远 (liangzy@hlz.com)',
+        to: '林昊 (linhao@hlz.com)',
+        time: '████-██-██ ██:██',
+        subject: 'Re: Re: Re: AX13 第三方检测结果',
+        body: '不需要修复。静默修复也要走工单，一旦留痕就等于承认漏洞存在。就按现在的方案——报告压着，如果72小时到期自动升级，我去找质量部把那个自动升级的规则改掉。这件事到此为止，不要再在邮件里讨论。',
+        tags: ['回复链最深层 Re:Re:Re:', '明确拒绝修复'],
+        corrupt: true
+      }
+    ];
+
+    // 打乱顺序
+    const shuffled = [...fragments].sort(() => Math.random() - 0.5);
+    let selectedFragment = null;
+    let placedFragments = {};
+    let questionsAnswered = 0;
+
+    function renderFragments() {
+      const list = document.getElementById('fragment-list');
+      list.innerHTML = shuffled.map(f => {
+        const isPlaced = Object.values(placedFragments).includes(f.id);
+        return `
+          <div class="email-fragment ${isPlaced ? 'placed' : ''} ${selectedFragment === f.id ? 'active' : ''}" 
+               id="frag-${f.id}" onclick="selectFragment('${f.id}')">
+            <div class="frag-header">
+              <span><span class="frag-tag frag-tag-from">发件: ${f.from.split('(')[0].trim()}</span></span>
+              <span><span class="frag-tag frag-tag-time">${f.corrupt ? '⚠️ 时间戳损坏' : f.time}</span></span>
+            </div>
+            <div style="font-size:12px;color:var(--accent-blue);margin:4px 0;font-weight:600;">${f.subject}</div>
+            <div class="frag-body">${f.body}</div>
+            <div style="margin-top:6px;">
+              ${f.tags.map(t => `<span class="frag-tag frag-tag-corrupt" style="margin-right:4px;">🔍 ${t}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSlots() {
+      const slotsEl = document.getElementById('timeline-slots');
+      const hints = [
+        '最早的邮件——一切的起点',
+        '第一次回复——关键决策',
+        '讨论深入——方案分歧',
+        '最终定调——不可逆的决定',
+        '新的危机——事态升级',
+        '最后的共谋——全面掩盖'
+      ];
+      slotsEl.innerHTML = Array.from({length:6}, (_,i) => {
+        const filled = placedFragments[i];
+        const frag = filled ? fragments.find(f => f.id === filled) : null;
+        return `
+          <div class="timeline-slot ${selectedFragment ? 'active' : ''} ${filled ? 'filled' : ''}" 
+               id="slot-${i}" onclick="placeFragment(${i})">
+            <span class="slot-number">#${i+1}</span>
+            <div class="slot-label">📍 位置 ${i+1}</div>
+            ${filled
+              ? `<div class="slot-content"><strong>${frag.subject}</strong><br><span style="font-size:12px;color:var(--text-secondary);">${frag.from.split('(')[0].trim()}</span></div>
+                 <button class="btn-secondary" style="margin-top:8px;padding:4px 10px;font-size:11px;" onclick="event.stopPropagation();removeFragment(${i})">移除</button>`
+              : `<div class="slot-hint">${hints[i]}</div>`
+            }
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectFragment(id) {
+      if (Object.values(placedFragments).includes(id)) return;
+      selectedFragment = selectedFragment === id ? null : id;
+      renderFragments();
+      renderSlots();
+    }
+
+    function placeFragment(slotIndex) {
+      if (!selectedFragment) {
+        Interactions.notify('请先从左侧选择一个邮件碎片', 'warning');
+        return;
+      }
+      if (placedFragments[slotIndex]) {
+        Interactions.notify('该位置已有碎片，请先移除', 'warning');
+        return;
+      }
+      placedFragments[slotIndex] = selectedFragment;
+      NightAudit.addEmailFragment(selectedFragment);
+      selectedFragment = null;
+      updateProgress();
+      renderFragments();
+      renderSlots();
+
+      if (typeof AudioEngine !== 'undefined') AudioEngine.playNotify();
+
+      const placedCount = Object.keys(placedFragments).length;
+      if (placedCount === 6) {
+        setTimeout(() => checkOrder(), 600);
+      }
+    }
+
+    function removeFragment(slotIndex) {
+      delete placedFragments[slotIndex];
+      updateProgress();
+      renderFragments();
+      renderSlots();
+    }
+
+    function updateProgress() {
+      const count = Object.keys(placedFragments).length;
+      document.getElementById('placed-count').textContent = `${count}/6`;
+      document.getElementById('remaining-count').textContent = `${6 - count} 个碎片`;
+      document.getElementById('progress-fill').style.width = `${(count/6)*50}%`;
+    }
+
+    function checkOrder() {
+      let correct = true;
+      for (let i = 0; i < 6; i++) {
+        const placedId = placedFragments[i];
+        const frag = fragments.find(f => f.id === placedId);
+        if (!frag || frag.correctSlot !== i) {
+          correct = false;
+          const slotEl = document.getElementById(`slot-${i}`);
+          slotEl.classList.add('wrong-slot');
+          setTimeout(() => slotEl.classList.remove('wrong-slot'), 1500);
+        }
+      }
+
+      if (correct) {
+        Interactions.notify('🎉 邮件链完美还原！', 'success', 3000);
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playSuccess();
+        document.getElementById('progress-fill').style.width = '50%';
+        NightAudit.addClue('EMAIL-CHAIN', { name: '邮件链还原', value: '6封邮件完整还原——揭示AX13漏洞被蓄意压制的全过程', source: 'P6-邮件考古' });
+        setTimeout(() => showAnalysis(), 800);
+      } else {
+        Interactions.notify('❌ 顺序有误——仔细阅读邮件内容中的时间线索和回复关系', 'error', 3000);
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playError();
+      }
+    }
+
+    function showAnalysis() {
+      const analysis = document.getElementById('chain-analysis');
+      analysis.classList.add('visible');
+      analysis.innerHTML = `
+        <div class="card">
+          <div class="card-header"><span class="card-title">📊 邮件链分析</span></div>
+          <div class="analysis-step" style="animation-delay:0s">
+            <strong>1月24日 09:15</strong> — 质量部自动系统检测到 AX13 门锁高危漏洞，按规程需72小时内响应。
+          </div>
+          <div class="analysis-step" style="animation-delay:0.2s">
+            <strong>1月24日 14:33</strong> — 梁志远收到报告后，指示林昊"软化措辞"并暂压报告。原因：<strong>3200台出货量，召回损失超800万</strong>。
+          </div>
+          <div class="analysis-step" style="animation-delay:0.4s">
+            <strong>约1月25-26日</strong> — 林昊执行指示，将漏洞标注为"理论风险，暂不处理"。但他内心有疑虑，建议至少做静默修复。
+          </div>
+          <div class="analysis-step" style="animation-delay:0.6s">
+            <strong>约1月26-27日</strong> — 梁志远明确拒绝任何形式的修复——"静默修复也要走工单，留痕等于承认漏洞存在"。并警告"不要在邮件里讨论"。
+          </div>
+          <div class="analysis-step" style="animation-delay:0.8s">
+            <strong>约2月中旬</strong> — 许知微开始投诉。梁志远紧急指示使用 <strong>svc-admin-0312</strong> 修改 HZ-7 知识库，自动关闭她的工单。
+          </div>
+          <div class="analysis-step" style="animation-delay:1s">
+            <strong>同期</strong> — 林昊建议清理审计日志，并开始删除供应链往来邮件——也就是我们正在恢复的这些碎片。
+          </div>
+        </div>
+      `;
+      setTimeout(() => showQuestions(), 1500);
+    }
+
+    function showQuestions() {
+      const qPanel = document.getElementById('question-panel');
+      qPanel.classList.add('visible');
+      qPanel.innerHTML = `
+        <div class="question-card fade-in">
+          <h4>🧠 推理题 1/3：梁志远选择压制报告的核心动机是什么？</h4>
+          <p>从邮件链中分析，他反对修复的根本原因是——</p>
+          <div class="answer-options" id="q1-options">
+            <div class="answer-option" onclick="answerQuestion(1, this, false)">A. 他认为漏洞只是理论风险，不会被实际利用</div>
+            <div class="answer-option" onclick="answerQuestion(1, this, false)">B. 他担心修复过程会影响产品交付进度</div>
+            <div class="answer-option" onclick="answerQuestion(1, this, true)">C. 他害怕留下任何承认漏洞存在的记录（留痕=承认）</div>
+            <div class="answer-option" onclick="answerQuestion(1, this, false)">D. 他需要等待Q1营收数据才能做决定</div>
+          </div>
+          <div class="form-hint" id="q1-hint"></div>
+        </div>
+
+        <div class="question-card fade-in" id="q2-card" style="display:none">
+          <h4>🧠 推理题 2/3：这条邮件链中，谁可能成为关键证人？</h4>
+          <p>如果这件事要走法律程序，哪个人最有可能被翻转为"污点证人"？</p>
+          <div class="answer-options" id="q2-options">
+            <div class="answer-option" onclick="answerQuestion(2, this, false)">A. 质量部系统 — 它只是自动发通知</div>
+            <div class="answer-option" onclick="answerQuestion(2, this, true)">B. 林昊 — 他有顾虑并曾建议修复，是被迫执行的从犯</div>
+            <div class="answer-option" onclick="answerQuestion(2, this, false)">C. 许知微 — 她是受害者但不了解内部运作</div>
+            <div class="answer-option" onclick="answerQuestion(2, this, false)">D. 梁志远 — 他是主谋但不会自证其罪</div>
+          </div>
+          <div class="form-hint" id="q2-hint"></div>
+        </div>
+
+        <div class="question-card fade-in" id="q3-card" style="display:none">
+          <h4>🧠 推理题 3/3：邮件链中的哪条信息，直接关联到 HZ-7 的异常行为？</h4>
+          <p>哪封邮件的内容直接解释了为什么 HZ-7 会自动关闭许知微的工单？</p>
+          <div class="answer-options" id="q3-options">
+            <div class="answer-option" onclick="answerQuestion(3, this, false)">A. 第1封 — 检测报告提到了漏洞细节</div>
+            <div class="answer-option" onclick="answerQuestion(3, this, false)">B. 第2封 — 梁志远决定压制报告</div>
+            <div class="answer-option" onclick="answerQuestion(3, this, true)">C. 第5封 — 梁志远指示用 svc-admin-0312 修改 HZ-7 知识库规则</div>
+            <div class="answer-option" onclick="answerQuestion(3, this, false)">D. 第6封 — 林昊建议清理审计日志</div>
+          </div>
+          <div class="form-hint" id="q3-hint"></div>
+        </div>
+      `;
+    }
+
+    function answerQuestion(qNum, el, isCorrect) {
+      const options = document.querySelectorAll(`#q${qNum}-options .answer-option`);
+      const hint = document.getElementById(`q${qNum}-hint`);
+
+      if (isCorrect) {
+        el.classList.add('correct');
+        options.forEach(o => { if (o !== el) o.classList.add('disabled'); });
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playSuccess();
+        questionsAnswered++;
+
+        const explanations = {
+          1: '✅ 正确！梁志远的第4封邮件明确说"静默修复也要走工单，留痕等于承认漏洞存在"——他不是不知道风险，而是刻意选择掩盖。',
+          2: '✅ 正确！林昊在第3封邮件中表达了疑虑并建议修复，说明他并非心甘情愿。作为"有顾虑的执行者"，他是最有可能被策反的证人。',
+          3: '✅ 正确！第5封邮件直接提到"用 svc-admin-0312 修改 HZ-7 的知识库规则，让系统自动把她的工单标为重复投诉并关闭"——这就是 HZ-7 异常行为的根源指令。'
+        };
+        hint.textContent = explanations[qNum];
+        hint.style.color = 'var(--accent-green)';
+
+        const clueData = {
+          1: { id: 'EMAIL-MOTIVE', name: '压制动机', value: '梁志远明确拒绝任何留痕的修复方式——"留痕=承认"', source: 'P6-邮件推理' },
+          2: { id: 'EMAIL-WITNESS', name: '潜在证人', value: '林昊是被迫执行的从犯，曾建议修复，可能成为关键证人', source: 'P6-邮件推理' },
+          3: { id: 'EMAIL-HZ7-LINK', name: 'HZ-7指令来源', value: '梁志远指示用svc-admin-0312修改HZ-7知识库→自动关单', source: 'P6-邮件推理' }
+        };
+        NightAudit.addClue(clueData[qNum].id, clueData[qNum]);
+
+        document.getElementById('progress-fill').style.width = `${50 + questionsAnswered * 16.7}%`;
+
+        if (qNum < 3) {
+          setTimeout(() => {
+            document.getElementById(`q${qNum+1}-card`).style.display = 'block';
+            document.getElementById(`q${qNum+1}-card`).scrollIntoView({ behavior:'smooth' });
+          }, 1000);
+        }
+
+        if (questionsAnswered >= 3) {
+          setTimeout(() => showComplete(), 1200);
+        }
+      } else {
+        el.classList.add('incorrect');
+        setTimeout(() => el.classList.remove('incorrect'), 1000);
+        hint.textContent = '❌ 再想想——仔细回顾邮件链中每封邮件的关键细节';
+        hint.style.color = 'var(--accent-red)';
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playError();
+      }
+    }
+
+    function showComplete() {
+      NightAudit.set('emailRecovered', true);
+      document.getElementById('progress-fill').style.width = '100%';
+      
+      Interactions.notify('📧 邮件考古完成！发现关键证据链', 'clue', 4000);
+
+      const completeDiv = document.createElement('div');
+      completeDiv.className = 'card fade-in';
+      completeDiv.style.marginTop = '20px';
+      completeDiv.innerHTML = `
+        <div class="alert alert-success">
+          <span class="alert-icon">✅</span>
+          <div>
+            <strong>邮件链还原完成。</strong>你已经从被删除的碎片中重建了完整的决策链：<br>
+            漏洞发现 → 蓄意压制 → 拒绝修复 → 许知微投诉 → 利用AI系统自动掩盖 → 清理痕迹<br><br>
+            下一步：追踪供应链上的证据——AX13 的制造和质检环节是否也被篡改了？
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:12px;">
+          <button class="btn-primary proceed-btn-pulse" onclick="Navigation.goTo(7)">
+            🔗 进入供应链追踪 →
+          </button>
+        </div>
+      `;
+      document.querySelector('.main-content').appendChild(completeDiv);
+      completeDiv.scrollIntoView({ behavior:'smooth' });
+    }
+
+    // 初始化
+    renderFragments();
+    renderSlots();
+  </script>
+</body>
+</html>
