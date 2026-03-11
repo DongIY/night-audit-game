@@ -1,6 +1,6 @@
 /**
- * 《夜班审计》状态管理模块 v3.0
- * 支持16章节、跨章线索联动、道德抉择系统、多结局
+ * 《夜班审计》状态管理模块 v4.0
+ * 支持18章节、跨章线索联动、道德抉择系统、多结局
  */
 const NightAudit = (() => {
   const STORAGE_KEY = 'night-audit-save';
@@ -12,6 +12,7 @@ const NightAudit = (() => {
     loginComplete: false,
     filterApplied: false,
     victimFound: false,
+    victimProfileDone: false,  // 受害者画像完成
     cacheRecovered: false,
     logTampered: false,
     kbCompared: false,
@@ -19,6 +20,7 @@ const NightAudit = (() => {
     emailRecovered: false,    // 邮件考古完成
     supplyChainDone: false,   // 供应链调查完成
     dbForensicDone: false,    // 数据库取证完成
+    conspiracyDone: false,    // 深夜密谋完成
     timelineBuilt: false,     // 监控回放完成
     tokenAssembled: false,
     snapshotRestored: false,
@@ -160,18 +162,20 @@ const NightAudit = (() => {
       1: state.prologueDone,          // 登录
       2: state.loginComplete,         // 事故总览
       3: state.filterApplied,         // 工单详情
-      4: state.cacheRecovered,        // 审计日志
-      5: state.logTampered,           // 知识库对比
-      6: state.kbCompared,            // 邮件考古 (新)
-      7: state.emailRecovered,        // 供应链调查 (新)
-      8: state.supplyChainDone,       // 数据库取证 (新)
-      9: state.dbForensicDone,        // 权限恢复
-      10: state.snapshotRestored,     // 通讯解密
-      11: state.commsDecrypted,       // 人事档案
-      12: state.suspectIdentified,    // 监控回放 (新)
-      13: state.timelineBuilt,        // 终端
-      14: state.terminalAccessed,     // 道德抉择
-      15: state.choiceMade            // 终局
+      4: state.victimFound,           // 受害者画像 (新)
+      5: state.victimProfileDone || state.cacheRecovered, // 审计日志 (可跳过画像)
+      6: state.logTampered,           // 知识库对比
+      7: state.kbCompared,            // 邮件考古
+      8: state.emailRecovered,        // 供应链调查
+      9: state.supplyChainDone,       // 数据库取证
+      10: state.dbForensicDone,       // 权限恢复
+      11: state.snapshotRestored,     // 通讯解密
+      12: state.commsDecrypted,       // 深夜密谋 (新)
+      13: state.conspiracyDone || state.suspectIdentified, // 人事档案
+      14: state.suspectIdentified,    // 监控回放
+      15: state.timelineBuilt,        // 终端
+      16: state.terminalAccessed,     // 道德抉择
+      17: state.choiceMade            // 终局
     };
     return rules[pageNum] !== undefined ? rules[pageNum] : true;
   }
