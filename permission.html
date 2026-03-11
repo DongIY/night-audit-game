@@ -28,7 +28,7 @@
           <p><strong>发件人：</strong>compliance-auto@helplinezero.com</p>
           <p><strong>原始时间：</strong>02:48 AM</p>
           <hr style="border-color:var(--border);margin:12px 0;">
-          <p>程述 (CSA-2917)，</p>
+          <p><span id="perm-user-name">审计员</span>，</p>
           <p>你的 L3 权限升级请求已获自动审批。</p>
           <p>审批模板编号：<span class="visible-fragment">APR-2026-0441</span></p>
           <p>快照编号：<span class="redacted-block">████████████</span></p>
@@ -128,6 +128,15 @@
 
   <div id="bottom-bar"></div>
 
+  <script>
+    // 动态填充玩家名字
+    (function() {
+      const name = (() => { try { const s = localStorage.getItem('nightAuditState'); return s ? JSON.parse(s).playerName : null; } catch(e) { return null; } })();
+      const empId = (() => { try { const s = localStorage.getItem('nightAuditState'); return s ? JSON.parse(s).employeeId : null; } catch(e) { return null; } })();
+      const el = document.getElementById('perm-user-name');
+      if (el && name) el.textContent = name + ' (' + (empId || 'CSA-2917') + ')';
+    })();
+  </script>
   <script src="js/game-state.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/navigation.js"></script>
