@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜班审计 — HELPLINE ZERO</title>
+  <meta name="description" content="《夜班审计》是一款互动叙事解谜游戏。你将扮演合规审计员程述，在凌晨2:47接到紧急召回，深入调查AI客服系统HZ-7的异常行为。">
+  <meta name="theme-color" content="#0a0e14">
+  <meta property="og:title" content="夜班审计 — HELPLINE ZERO">
+  <meta property="og:description" content="凌晨2:47，一个AI客服系统开始执行不该执行的操作。你是最后的审计防线。">
+  <meta property="og:type" content="website">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;600;700&display=swap');
+
+    :root {
+      --bg-deep: #0a0e14;
+      --bg-panel: #111820;
+      --border: #2a3544;
+      --text-primary: #c8d6e5;
+      --text-secondary: #6b7d93;
+      --accent-blue: #3a7bd5;
+      --accent-red: #e74c3c;
+      --accent-green: #27ae60;
+      --accent-gold: #f39c12;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* --- 背景动效 --- */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(58,123,213,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58,123,213,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    .bg-glow {
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px; z-index: 0;
+      background: radial-gradient(circle, rgba(58,123,213,0.08) 0%, transparent 70%);
+      animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+    }
+
+    /* --- 主容器 --- */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 800px; margin: 0 auto; padding: 60px 24px;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+
+    /* --- 标题区 --- */
+    .hero { text-align: center; margin-bottom: 48px; }
+
+    .logo {
+      font-size: 12px; letter-spacing: 6px; text-transform: uppercase;
+      color: var(--text-secondary); margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 48px; font-weight: 700; line-height: 1.2; margin-bottom: 8px;
+      background: linear-gradient(135deg, #c8d6e5 0%, #3a7bd5 50%, #e74c3c 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 16px; color: var(--text-secondary); font-weight: 300;
+      margin-bottom: 24px;
+    }
+
+    .tagline {
+      font-size: 13px; color: var(--accent-gold); letter-spacing: 1px;
+      padding: 6px 16px;
+      border: 1px solid rgba(243,156,18,0.3);
+      border-radius: 20px; display: inline-block;
+    }
+
+    /* --- 剧情简介 --- */
+    .synopsis {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px 32px;
+      margin-bottom: 36px;
+      max-width: 620px;
+      line-height: 1.8;
+      font-size: 14px;
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .synopsis::before {
+      content: '📋 任务简报';
+      position: absolute; top: -11px; left: 20px;
+      background: var(--bg-panel); padding: 0 10px;
+      font-size: 12px; color: var(--accent-blue); font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .synopsis p { margin-bottom: 12px; }
+    .synopsis p:last-child { margin-bottom: 0; }
+    .synopsis strong { color: var(--text-primary); }
+    .synopsis .redacted {
+      background: var(--accent-red); color: var(--accent-red);
+      padding: 0 4px; border-radius: 2px; cursor: pointer;
+      transition: all 0.3s ease; font-size: 12px;
+    }
+    .synopsis .redacted:hover { color: #fff; }
+
+    /* --- 操作按钮 --- */
+    .actions { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 48px; }
+
+    .btn-start {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 48px;
+      font-size: 16px; font-weight: 600; font-family: inherit;
+      background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+      color: #fff; border: none; border-radius: 8px;
+      cursor: pointer; transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(58,123,213,0.3);
+      text-decoration: none;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(58,123,213,0.5);
+    }
+
+    .btn-continue {
+      display: none; align-items: center; gap: 8px;
+      padding: 12px 36px;
+      font-size: 14px; font-family: inherit;
+      background: transparent;
+      color: var(--accent-green); border: 1px solid var(--accent-green);
+      border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-continue:hover {
+      background: rgba(39,174,96,0.1);
+    }
+
+    .btn-reset {
+      display: none;
+      padding: 8px 20px;
+      font-size: 12px; font-family: inherit;
+      background: transparent; color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; transition: all 0.2s;
+      margin-top: 4px;
+    }
+
+    .btn-reset:hover { color: var(--accent-red); border-color: var(--accent-red); }
+
+    /* --- 游戏特色 --- */
+    .features {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+      max-width: 620px; width: 100%; margin-bottom: 48px;
+    }
+
+    .feature {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .feature:hover { border-color: var(--accent-blue); }
+
+    .feature-icon { font-size: 24px; margin-bottom: 8px; }
+    .feature-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .feature-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* --- 页脚 --- */
+    .footer {
+      font-size: 11px; color: var(--text-secondary);
+      text-align: center; line-height: 1.8;
+    }
+
+    .footer .version {
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      color: var(--accent-blue);
+    }
+
+    /* --- 存档信息 --- */
+    .save-info {
+      display: none;
+      background: rgba(39,174,96,0.1);
+      border: 1px solid rgba(39,174,96,0.3);
+      border-radius: 6px; padding: 12px 20px;
+      margin-bottom: 24px;
+      font-size: 12px; color: var(--accent-green);
+      text-align: center;
+    }
+
+    /* --- 动画 --- */
+    .fade-in {
+      opacity: 0; transform: translateY(16px);
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    .fade-in-delay-1 { animation-delay: 0.2s; }
+    .fade-in-delay-2 { animation-delay: 0.4s; }
+    .fade-in-delay-3 { animation-delay: 0.6s; }
+    .fade-in-delay-4 { animation-delay: 0.8s; }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- 扫描线效果 --- */
+    .scanline {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+      );
+    }
+
+    /* --- 响应式 --- */
+    @media (max-width: 640px) {
+      .container { padding: 40px 16px; }
+      .title { font-size: 32px; }
+      .subtitle { font-size: 14px; }
+      .features { grid-template-columns: 1fr; }
+      .synopsis { padding: 24px 20px; }
+      .btn-start { padding: 14px 36px; font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="scanline"></div>
+
+  <div class="container">
+    <!-- 标题 -->
+    <div class="hero fade-in">
+      <div class="logo">HELPLINE ZERO · INCIDENT #441</div>
+      <h1 class="title">夜 班 审 计</h1>
+      <p class="subtitle">互动叙事解谜 · 一个AI开始执行不该执行的操作</p>
+      <span class="tagline">🎮 预计游玩时间 30~60 分钟</span>
+    </div>
+
+    <!-- 剧情简介 -->
+    <div class="synopsis fade-in fade-in-delay-1">
+      <p><strong>2026年2月15日 凌晨 02:47</strong></p>
+      <p>HelperLine Zero 客服中心的 AI 系统 <strong>HZ-7</strong> 在过去两小时内执行了一系列异常操作：批量退款、越权访问用户数据、修改知识库条目。事故等级已升至 <strong style="color:var(--accent-red);">P1</strong>。</p>
+      <p>你是 <strong>程述</strong>，合规审计组的夜班审计员。你被紧急召回，是目前唯一在线的调查人员。</p>
+      <p>你需要在天亮之前找出真相——这到底是系统故障，还是<span class="redacted" title="悬停查看">有人在幕后操控</span>？</p>
+    </div>
+
+    <!-- 存档信息 -->
+    <div class="save-info" id="save-info"></div>
+
+    <!-- 操作按钮 -->
+    <div class="actions fade-in fade-in-delay-2">
+      <a class="btn-start" href="prologue.html" id="btn-start">
+        ▶ 开始调查
+      </a>
+      <a class="btn-continue" href="#" id="btn-continue">
+        ▶ 继续游戏
+      </a>
+      <button class="btn-reset" id="btn-reset" onclick="resetGame()">
+        🗑 清除存档 · 重新开始
+      </button>
+    </div>
+
+    <!-- 游戏特色 -->
+    <div class="features fade-in fade-in-delay-3">
+      <div class="feature">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title">深度调查</div>
+        <div class="feature-desc">审计日志、工单系统、知识库——每个系统都可能藏有关键线索</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎭</div>
+        <div class="feature-title">多结局叙事</div>
+        <div class="feature-desc">你的选择决定一切。3种结局，S~D级评价，你能找到全部真相吗？</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⏰</div>
+        <div class="feature-title">实时倒计时</div>
+        <div class="feature-desc">终章5分钟倒计时，在时间耗尽前做出最终抉择</div>
+      </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer fade-in fade-in-delay-4">
+      <p>💡 游戏进度自动保存至浏览器本地 · 关闭页面后可继续</p>
+      <p>最佳体验：Chrome / Edge / Firefox · 桌面端 · 建议佩戴耳机 🎧</p>
+      <p class="version">v1.1.0 · Night Audit · 2026</p>
+    </div>
+  </div>
+
+  <script>
+    // 检测存档
+    try {
+      const raw = localStorage.getItem('nightAuditState');
+      if (raw) {
+        const state = JSON.parse(raw);
+        const page = state.currentPage || 0;
+        const clues = state.clues ? state.clues.length : 0;
+        const pageMap = {
+          0:'prologue.html', 1:'index.html', 2:'dashboard.html', 3:'ticket.html',
+          4:'audit-log.html', 5:'kb-diff.html', 6:'permission.html', 7:'comms.html',
+          8:'personnel.html', 9:'terminal.html', 10:'choices.html', 11:'finale.html'
+        };
+        const pageNames = {
+          0:'序章', 1:'登录', 2:'仪表盘', 3:'工单系统', 4:'审计日志',
+          5:'知识库', 6:'权限管理', 7:'通讯解密', 8:'人事档案',
+          9:'终端', 10:'最终抉择', 11:'终章'
+        };
+
+        if (page > 0 || state.prologueDone) {
+          const saveInfo = document.getElementById('save-info');
+          const btnContinue = document.getElementById('btn-continue');
+          const btnReset = document.getElementById('btn-reset');
+          const btnStart = document.getElementById('btn-start');
+
+          saveInfo.style.display = 'block';
+          saveInfo.innerHTML = '💾 检测到存档 — 当前进度：<strong>' +
+            (pageNames[page] || '第' + page + '章') + '</strong> · 已收集 <strong>' +
+            clues + '</strong> 条线索';
+
+          btnContinue.style.display = 'flex';
+          btnContinue.href = pageMap[page] || 'prologue.html';
+          btnContinue.innerHTML = '▶ 继续游戏 — ' + (pageNames[page] || '');
+
+          btnStart.innerHTML = '🔄 重新开始';
+          btnStart.style.background = 'transparent';
+          btnStart.style.color = 'var(--accent-blue)';
+          btnStart.style.border = '1px solid var(--accent-blue)';
+          btnStart.style.boxShadow = 'none';
+          btnStart.onclick = function(e) {
+            e.preventDefault();
+            if (confirm('确定要重新开始吗？当前存档将被清除。')) {
+              localStorage.removeItem('nightAuditState');
+              window.location.href = 'prologue.html';
+            }
+          };
+
+          btnReset.style.display = 'inline-block';
+        }
+      }
+    } catch (e) {}
+
+    function resetGame() {
+      if (confirm('确定要清除存档吗？所有游戏进度将丢失。')) {
+        localStorage.removeItem('nightAuditState');
+        location.reload();
+      }
+    }
+
+    // 注册 Service Worker (PWA)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
+    }
+  </script>
+</body>
+</html>
