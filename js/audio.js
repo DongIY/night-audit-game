@@ -285,12 +285,168 @@ const AudioEngine = (() => {
     bgmPlaying = false;
   }
 
+
+  /** 成就解锁音效 — 华丽的上行琶音 + 高频闪光 */
+  function playAchievement() {
+    if (!enabled) return;
+    const c = getCtx();
+    const notes = [523, 659, 784, 1047, 1319]; // C5-E5-G5-C6-E6
+    notes.forEach((freq, i) => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.06, c.currentTime + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + i * 0.1 + 0.6);
+      osc.connect(gain).connect(c.destination);
+      osc.start(c.currentTime + i * 0.1);
+      osc.stop(c.currentTime + i * 0.1 + 0.6);
+    });
+    // 高频闪光
+    const shimmer = c.createOscillator();
+    const sGain = c.createGain();
+    shimmer.type = 'sine';
+    shimmer.frequency.value = 3520;
+    sGain.gain.setValueAtTime(0.01, c.currentTime + 0.3);
+    sGain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 1.2);
+    shimmer.connect(sGain).connect(c.destination);
+    shimmer.start(c.currentTime + 0.3);
+    shimmer.stop(c.currentTime + 1.2);
+  }
+
+  /** 紧张心跳音效 */
+  function playHeartbeat() {
+    if (!enabled) return;
+    const c = getCtx();
+    [0, 0.15].forEach(delay => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 60;
+      gain.gain.setValueAtTime(0.08, c.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + 0.2);
+      osc.connect(gain).connect(c.destination);
+      osc.start(c.currentTime + delay);
+      osc.stop(c.currentTime + delay + 0.2);
+    });
+  }
+
+  /** 打字机回车音 */
+  function playReturn() {
+    if (!enabled) return;
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 500;
+    gain.gain.setValueAtTime(0.05, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
+    osc.connect(gain).connect(c.destination);
+    osc.start(c.currentTime);
+    osc.stop(c.currentTime + 0.08);
+  }
+
+  /** 数据扫描音效 */
+  function playScan() {
+    if (!enabled) return;
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, c.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(2000, c.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.03, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.4);
+    osc.connect(gain).connect(c.destination);
+    osc.start(c.currentTime);
+    osc.stop(c.currentTime + 0.4);
+  }
+
+
+  /** 成就解锁音效 — 华丽的上行琶音 + 高频闪光 */
+  function playAchievement() {
+    if (!enabled) return;
+    const c = getCtx();
+    const notes = [523, 659, 784, 1047, 1319]; // C5-E5-G5-C6-E6
+    notes.forEach((freq, i) => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.06, c.currentTime + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + i * 0.1 + 0.6);
+      osc.connect(gain).connect(c.destination);
+      osc.start(c.currentTime + i * 0.1);
+      osc.stop(c.currentTime + i * 0.1 + 0.6);
+    });
+    // 高频闪光
+    const shimmer = c.createOscillator();
+    const sGain = c.createGain();
+    shimmer.type = 'sine';
+    shimmer.frequency.value = 3520;
+    sGain.gain.setValueAtTime(0.01, c.currentTime + 0.3);
+    sGain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 1.2);
+    shimmer.connect(sGain).connect(c.destination);
+    shimmer.start(c.currentTime + 0.3);
+    shimmer.stop(c.currentTime + 1.2);
+  }
+
+  /** 紧张心跳音效 */
+  function playHeartbeat() {
+    if (!enabled) return;
+    const c = getCtx();
+    [0, 0.15].forEach(delay => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 60;
+      gain.gain.setValueAtTime(0.08, c.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + 0.2);
+      osc.connect(gain).connect(c.destination);
+      osc.start(c.currentTime + delay);
+      osc.stop(c.currentTime + delay + 0.2);
+    });
+  }
+
+  /** 打字机回车音 */
+  function playReturn() {
+    if (!enabled) return;
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 500;
+    gain.gain.setValueAtTime(0.05, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
+    osc.connect(gain).connect(c.destination);
+    osc.start(c.currentTime);
+    osc.stop(c.currentTime + 0.08);
+  }
+
+  /** 数据扫描音效 */
+  function playScan() {
+    if (!enabled) return;
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, c.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(2000, c.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.03, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.4);
+    osc.connect(gain).connect(c.destination);
+    osc.start(c.currentTime);
+    osc.stop(c.currentTime + 0.4);
+  }
+
   loadPreference();
 
   return {
     isEnabled, toggle,
     playKeystroke, playRingtone, playClueFound, playSuccess, playError,
     playNotify, playTransition, playTick, playMsgAlert,
+    playAchievement, playHeartbeat, playReturn, playScan,
+    playAchievement, playHeartbeat, playReturn, playScan,
     startBGM, startUrgentBGM, stopBGM,
     getCtx  // 初始化 AudioContext（需要用户交互）
   };
