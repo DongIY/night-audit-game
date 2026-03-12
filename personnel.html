@@ -70,7 +70,7 @@
   <script>
     const personnel = [
       {
-        id: 'EMP-3127', name: '梁志远', role: '运营副总裁', dept: '运营管理部',
+        id: 'EMP-3127', name: '何志远', role: '运营副总裁', dept: '运营管理部',
         avatar: '👔', joinDate: '2019-03-15', level: 'VP',
         bio: '负责 Helpline Zero 全部运营管理。直接向 CEO 汇报。2023年起兼管供应链质量合规。',
         accessLog: [
@@ -82,7 +82,7 @@
           { time: '02-15 03:05', action: '远程访问服务器 srv-hz-prod-01', anomaly: true }
         ],
         connections: ['林昊 (供应链)', 'svc-admin-0312', 'KB-4412 修改者'],
-        note: '在事故发生前 4 小时，梁志远通过 admin 权限访问了服务账号配置。他的访问记录与通讯解密中 "L" 的署名高度吻合。',
+        note: '在事故发生前 4 小时，何志远通过 admin 权限访问了服务账号配置。他的访问记录与通讯解密中 "L" 的署名高度吻合。',
         suspicious: true
       },
       {
@@ -95,8 +95,8 @@
           { time: '02-14 23:15', action: '发送加密内部通讯', anomaly: true },
           { time: '02-15 01:00', action: '删除 AX13 原始质检报告附件', anomaly: true }
         ],
-        connections: ['梁志远 (指示链)', 'AX13 召回报告', '许知微投诉工单'],
-        note: '林昊参与了 AX13 召回报告的篡改。根据通讯记录，他受梁志远指示压制门锁漏洞信息。',
+        connections: ['何志远 (指示链)', 'AX13 召回报告', '许知微投诉工单'],
+        note: '林昊参与了 AX13 召回报告的篡改。根据通讯记录，他受何志远指示压制门锁漏洞信息。',
         suspicious: true
       },
       {
@@ -224,10 +224,10 @@
       if (input === 'EMP-3127' || input === 'EMP3127') {
         suspectConfirmed = true;
         NightAudit.set('suspectIdentified', true);
-        NightAudit.addClue('SUSPECT', { name: '幕后主导者确认', value: '梁志远 (EMP-3127) — 运营副总裁', source: 'P8-人事档案指认' });
-        hint.textContent = '✅ 嫌疑人确认：梁志远 — 运营副总裁';
+        NightAudit.addClue('SUSPECT', { name: '幕后主导者确认', value: '何志远 (EMP-3127) — 运营副总裁', source: 'P8-人事档案指认' });
+        hint.textContent = '✅ 嫌疑人确认：何志远 — 运营副总裁';
         hint.style.color = 'var(--accent-green)';
-        Interactions.notify('🎯 嫌疑人已锁定：梁志远', 'success', 4000);
+        Interactions.notify('🎯 嫌疑人已锁定：何志远', 'success', 4000);
         document.getElementById('next-chapter').style.display = 'block';
         setTimeout(() => document.getElementById('next-chapter').scrollIntoView({ behavior: 'smooth' }), 500);
       } else if (input === '') {
