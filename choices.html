@@ -63,7 +63,7 @@
             </div>
           </div>
           <div class="choice-body">
-            你选择让真相完全曝光。所有证据——包括梁志远操控 svc-admin-0312 的服务器日志、伪造的审计记录、被强制关闭的工单、以及许知微的求助被系统性压制的完整链条——都将被提交至独立审计委员会和外部监管机构。
+            你选择让真相完全曝光。所有证据——包括何志远操控 svc-admin-0312 的服务器日志、伪造的审计记录、被强制关闭的工单、以及许知微的求助被系统性压制的完整链条——都将被提交至独立审计委员会和外部监管机构。
             <br><br>
             这将引发一场全面的内部调查，也许会动摇整个公司的管理层。但许知微的权益将得到保障，AX13 门锁的安全隐患将被公开解决。
           </div>
@@ -87,12 +87,12 @@
           <div class="choice-body">
             你选择走一条更微妙的路线。将证据私下提交给 CEO，以此施压要求公司内部自行处理——解决 AX13 安全问题、补偿许知微、重构系统权限。但不对外公开，避免公司遭受公关危机。
             <br><br>
-            梁志远将被"调离关键岗位"，但不会受到公开追究。系统问题会被修复，但你知道，根本的权力结构没有改变。
+            何志远将被"调离关键岗位"，但不会受到公开追究。系统问题会被修复，但你知道，根本的权力结构没有改变。
           </div>
           <div class="choice-consequences">
             <span class="consequence-tag consequence-positive">✅ AX13 漏洞被修复</span>
             <span class="consequence-tag consequence-neutral">⚡ 许知微获得部分补偿</span>
-            <span class="consequence-tag consequence-neutral">⚡ 梁志远被调离但未追责</span>
+            <span class="consequence-tag consequence-neutral">⚡ 何志远被调离但未追责</span>
             <span class="consequence-tag consequence-negative">⛔ 系统性问题可能复发</span>
             <span class="consequence-tag consequence-negative">⛔ 你持有了"筹码"</span>
           </div>
@@ -107,14 +107,14 @@
             </div>
           </div>
           <div class="choice-body">
-            你选择只处理技术层面的问题——暂停 HZ-7 的异常执行、恢复被关闭的工单、修复 TrustHold 覆盖规则。但你不追究背后的人为操控，不提交任何指向梁志远的证据。
+            你选择只处理技术层面的问题——暂停 HZ-7 的异常执行、恢复被关闭的工单、修复 TrustHold 覆盖规则。但你不追究背后的人为操控，不提交任何指向何志远的证据。
             <br><br>
             你告诉自己这是"务实的选择"。毕竟，揭露运营副总裁可能让你失去工作。但每次你看到系统中"已处理完成"的标记，你都知道这背后的真相。
           </div>
           <div class="choice-consequences">
             <span class="consequence-tag consequence-positive">✅ 直接技术问题被修复</span>
             <span class="consequence-tag consequence-negative">⛔ 许知微未获正义</span>
-            <span class="consequence-tag consequence-negative">⛔ 梁志远毫发无损</span>
+            <span class="consequence-tag consequence-negative">⛔ 何志远毫发无损</span>
             <span class="consequence-tag consequence-negative">⛔ 系统性问题完整保留</span>
             <span class="consequence-tag consequence-negative">⛔ 你的职业操守受损</span>
           </div>
@@ -148,21 +148,21 @@
       expose: {
         icon: '🔦',
         title: '你确定要公开揭露一切吗？',
-        text: '全部证据将提交至审计委员会和外部监管。梁志远将面临正式调查。这条路没有回头。<br><br>但许知微的求救，终将被听到。',
+        text: '全部证据将提交至审计委员会和外部监管。何志远将面临正式调查。这条路没有回头。<br><br>但许知微的求救，终将被听到。',
         ending: 'success',
         btnClass: 'btn-primary'
       },
       negotiate: {
         icon: '🤝',
         title: '你确定要走内部斡旋路线吗？',
-        text: '证据将私下提交给 CEO。AX13 会被修复，但梁志远只会被"调离"。<br><br>这是务实的选择——但也是有代价的选择。',
+        text: '证据将私下提交给 CEO。AX13 会被修复，但何志远只会被"调离"。<br><br>这是务实的选择——但也是有代价的选择。',
         ending: 'partial',
         btnClass: 'btn-primary'
       },
       cover: {
         icon: '🔇',
         title: '你确定要选择沉默吗？',
-        text: '你只修复技术问题，不追究人为因素。梁志远将安然无恙。<br><br>许知微的求救，将继续被折叠在系统消息里。',
+        text: '你只修复技术问题，不追究人为因素。何志远将安然无恙。<br><br>许知微的求救，将继续被折叠在系统消息里。',
         ending: 'failure',
         btnClass: 'btn-danger'
       }
@@ -175,10 +175,10 @@
       const clueEntries = Object.entries(clues);
 
       const events = [
-        { time: '22:38', event: '梁志远 (EMP-3127) 通过 svc-admin-0312 修改 KB-4412 知识库', critical: true },
+        { time: '22:38', event: '何志远 (EMP-3127) 通过 svc-admin-0312 修改 KB-4412 知识库', critical: true },
         { time: '22:41', event: '加密内部通讯发出——指示林昊压制 AX13 召回', critical: true },
         { time: '01:12', event: 'HZ-7 开始扫描，TrustHold 覆盖规则生效', critical: false },
-        { time: '01:28', event: '梁志远伪造审计日志，删除真实停止拒绝记录', critical: true },
+        { time: '01:28', event: '何志远伪造审计日志，删除真实停止拒绝记录', critical: true },
         { time: '01:45', event: '赵锐发出停止指令——被 TrustHold 覆盖', critical: false },
         { time: '02:30', event: '17 个附件文件进入清理队列', critical: false },
         { time: '02:47', event: '你接到紧急来电，开始调查', critical: false },
@@ -257,21 +257,21 @@
         title: '🔦 公开揭露 — 影响预测',
         impact: `<div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">结局走向：</strong>进入终章止损（3分钟倒计时），成功后获得「真相大白」结局</div>
           <div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">评级范围：</strong>S / A+ / A / A-（取决于线索数和证据通道数）</div>
-          <div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">后日谈亮点：</strong>梁志远被停职调查、AX13 全面召回、许知微获得正式道歉</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">后日谈亮点：</strong>何志远被停职调查、AX13 全面召回、许知微获得正式道歉</div>
           <div style="color:var(--accent-gold);font-size:11px;">⚠️ 需在终章完成止损操作，否则仍可能失败（C级结局）</div>`
       },
       negotiate: {
         title: '🤝 内部斡旋 — 影响预测',
         impact: `<div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">结局走向：</strong>直接进入「部分真相」结局，无需止损操作</div>
           <div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">评级范围：</strong>B+ / B / B-（内部斡旋路线上限为 B+）</div>
-          <div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">后日谈亮点：</strong>AX13 静默召回、梁志远被调离但未追责、新的 svc-admin 账号出现</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">后日谈亮点：</strong>AX13 静默召回、何志远被调离但未追责、新的 svc-admin 账号出现</div>
           <div style="color:var(--accent-orange);font-size:11px;">⚠️ 系统被修补，但权力结构不变——问题可能复发</div>`
       },
       cover: {
         title: '🔇 沉默退出 — 影响预测',
         impact: `<div style="margin-bottom:6px;"><strong style="color:#8b8b8b;">结局走向：</strong>直接进入「沉默的代价」结局（D级）</div>
           <div style="margin-bottom:6px;"><strong style="color:#8b8b8b;">评级范围：</strong>固定 D 级 — 你选择了沉默</div>
-          <div style="margin-bottom:6px;"><strong style="color:var(--accent-red);">后日谈警告：</strong>梁志远毫发无损、AX13 召回被标记"低优先级"、两个月后另一起入室事件发生</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-red);">后日谈警告：</strong>何志远毫发无损、AX13 召回被标记"低优先级"、两个月后另一起入室事件发生</div>
           <div style="color:var(--accent-red);font-size:11px;">⛔ 许知微的工单永远停留在"已处理完成"</div>`
       }
     };
