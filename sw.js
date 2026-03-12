@@ -1,16 +1,22 @@
-// Night Audit — Service Worker v1.1.0
-const CACHE_NAME = 'night-audit-v1.1.0';
+// Night Audit — Service Worker v1.4.0
+const CACHE_NAME = 'night-audit-v1.4.0';
 const ASSETS = [
   './home.html',
   './prologue.html',
   './index.html',
   './dashboard.html',
   './ticket.html',
+  './victim-profile.html',
   './audit-log.html',
   './kb-diff.html',
+  './email-forensics.html',
+  './supply-chain.html',
+  './db-forensics.html',
   './permission.html',
   './comms.html',
+  './conspiracy.html',
   './personnel.html',
+  './surveillance.html',
   './terminal.html',
   './choices.html',
   './finale.html',
