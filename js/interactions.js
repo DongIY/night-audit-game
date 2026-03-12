@@ -59,11 +59,51 @@ const Interactions = (() => {
       else AudioEngine.playNotify();
     }
 
+    // 线索发现时的增强效果
+    if (type === 'clue') {
+      showClueFlash();
+    }
+
     setTimeout(() => {
       el.classList.remove('notify-show');
       el.classList.add('notify-hide');
       setTimeout(() => el.remove(), 300);
     }, duration);
+  }
+
+  // 线索发现增强效果
+  let clueCombo = 0;
+  let comboTimer = null;
+
+  function showClueFlash() {
+    // 全屏闪光
+    const flash = document.createElement('div');
+    flash.className = 'clue-flash';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 600);
+
+    // 连击计数
+    clueCombo++;
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(() => { clueCombo = 0; }, 8000);
+
+    if (clueCombo >= 2) {
+      const combo = document.createElement('div');
+      combo.className = 'clue-combo';
+      combo.innerHTML = `<span class="combo-num">${clueCombo}x</span> <span class="combo-text">连续发现</span>`;
+      document.body.appendChild(combo);
+      setTimeout(() => combo.classList.add('combo-show'), 50);
+      setTimeout(() => {
+        combo.classList.add('combo-hide');
+        setTimeout(() => combo.remove(), 500);
+      }, 2000);
+    }
+
+    // 屏幕边缘脉冲
+    const pulse = document.createElement('div');
+    pulse.className = 'screen-pulse';
+    document.body.appendChild(pulse);
+    setTimeout(() => pulse.remove(), 1500);
   }
 
   function getNotifyContainer() {
