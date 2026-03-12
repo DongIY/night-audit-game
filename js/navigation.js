@@ -72,6 +72,27 @@ const Navigation = (() => {
     17: { num: '终章', title: '最后三分钟' }
   };
 
+  // 叙事转场：每个章节的沉浸式过渡文本（替代干巴巴的章节标题卡）
+  const narrativeTransitions = {
+    1: { lines: ['屏幕亮光刺入黑暗的卧室。', '你摸到手机——Helpline Zero 的紧急通道。', '深呼吸。登录系统。'], mood: 'tense' },
+    2: { lines: ['登录成功。控制台在你面前展开。', '23条工单被批量关闭——但关闭原因全是"已解决"。', '你的直觉告诉你，这不对。'], mood: 'suspicious' },
+    3: { lines: ['从23条工单中，你锁定了那一条。', '附件被清理，对话记录被截断。', '有人不想让你看到这些。'], mood: 'dark' },
+    4: { lines: ['许知微。28岁。独居。', '她的门锁在凌晨自动解锁了三次。', '她不知道发生了什么。但你需要她告诉你她知道的。'], mood: 'empathy' },
+    5: { lines: ['HZ-7 自动化规则的日志很长。', '但有两个时间戳之间，隔了整整11分钟的空白。', '日志不会自己消失。'], mood: 'suspicious' },
+    6: { lines: ['知识库的版本历史还在。', '有人在事故前48小时悄悄改了内容。', '改了什么？为什么要改？'], mood: 'dark' },
+    7: { lines: ['你进入了邮件服务器的回收站。', '成片的删除记录。有人在凌晨3点清理了整个发件箱。', '但回收站有30天保留期。他们忘了这一点。'], mood: 'discovery' },
+    8: { lines: ['AX13 门锁。3200台出货量。', '安全漏洞报告被标记为"低优先级"——三周前。', '谁做的这个决定？采购链上一定有答案。'], mood: 'tense' },
+    9: { lines: ['数据库不会撒谎。但有人试过。', '操作日志里有一段被覆盖的记录。', '你需要找到原始数据——在它被彻底清除之前。'], mood: 'urgent' },
+    10: { lines: ['散落的碎片开始拼合。', '你需要一个恢复令牌才能进入下一层。', '线索就在你已经收集的证据里。'], mood: 'tense' },
+    11: { lines: ['加密通讯频道。有人以为这里很安全。', '但每一种加密，都有对应的解法。', '幕后的声音就藏在这些密文里。'], mood: 'dark' },
+    12: { lines: ['你恢复了一组被删除的聊天记录。', '时间戳被人为损坏了——但对话内容暴露了一切。', '深夜，有人在密谋。'], mood: 'dark' },
+    13: { lines: ['svc-admin-0312。一个服务账号。', '有人用它修改了知识库，删除了审计日志，伪造了记录。', '但账号背后的那个人，还没有露面。'], mood: 'tense' },
+    14: { lines: ['门禁记录。监控回放。不在场证词。', '有人说"我一直在家"。', '让我们看看摄像头怎么说。'], mood: 'confrontation' },
+    15: { lines: ['服务器终端的访问权限已获取。', '命令行界面闪烁着光标。', '在这里，你可以直接查看被隐藏的一切。'], mood: 'hacker' },
+    16: { lines: ['你掌握了全部真相。', '公开揭露，还是内部斡旋，还是——假装什么都没发生？', '每一条路都有代价。选择的时间到了。'], mood: 'moral' },
+    17: { lines: ['自动清理队列还在运行。', '你只有三分钟。', '暂停队列。发送证据。现在。'], mood: 'critical' }
+  };
+
   const pageGuides = {
     0: { icon: '🌙', title: '深夜来电', text: '你是 Helpline Zero 的合规审计员。凌晨2点47分，手机突然响起——一个P1级事故需要你立即介入。<br><br>仔细阅读来电内容，准备进入系统。' },
     1: { icon: '🔐', title: '登录系统', text: '输入你的姓名并找到临时验证码才能登录系统。<br><br><strong>提示：</strong>仔细阅读右侧的邮件和顶部公告，将线索拼合成验证码。' },
@@ -128,14 +149,110 @@ const Navigation = (() => {
 
   function showTransition(chapterNum, title, callback) {
     if (typeof AudioEngine !== 'undefined') AudioEngine.playTransition();
+    const currentPage = getCurrentPage();
+    const nextPage = Object.keys(pages).find(k => pageChapters[k] && pageChapters[k].num === chapterNum && pageChapters[k].title === title);
+    const narr = narrativeTransitions[nextPage];
+
     const overlay = document.createElement('div');
     overlay.className = 'scene-transition';
-    overlay.innerHTML = `
-      <div class="scene-transition-text">${chapterNum}</div>
-      <div class="scene-transition-sub">${title}</div>
-    `;
-    document.body.appendChild(overlay);
-    setTimeout(callback, 1800);
+
+    if (narr && narr.lines.length > 0) {
+      // 叙事型转场
+      const moodClass = 'mood-' + (narr.mood || 'tense');
+      overlay.classList.add(moodClass);
+      overlay.innerHTML = `
+        <div class="narr-container">
+          <div class="narr-lines" id="narr-lines"></div>
+          <div class="narr-skip" id="narr-skip" onclick="document.querySelector('.scene-transition').__skipCb && document.querySelector('.scene-transition').__skipCb()">按任意键继续 ▸</div>
+        </div>
+        <div class="narr-chapter-tag">${chapterNum}</div>
+      `;
+      document.body.appendChild(overlay);
+
+      const linesEl = document.getElementById('narr-lines');
+      const skipEl = document.getElementById('narr-skip');
+      let lineIdx = 0;
+      let charIdx = 0;
+      let currentEl = null;
+      let typing = true;
+      let done = false;
+
+      function typeNext() {
+        if (done) return;
+        if (lineIdx >= narr.lines.length) {
+          // 所有行打完，显示跳过按钮
+          typing = false;
+          skipEl.style.opacity = '1';
+          return;
+        }
+        if (charIdx === 0) {
+          currentEl = document.createElement('div');
+          currentEl.className = 'narr-line';
+          if (lineIdx > 0) currentEl.style.animationDelay = '0s';
+          linesEl.appendChild(currentEl);
+        }
+        const line = narr.lines[lineIdx];
+        if (charIdx < line.length) {
+          currentEl.textContent += line[charIdx];
+          charIdx++;
+          setTimeout(typeNext, 35 + Math.random() * 25);
+        } else {
+          lineIdx++;
+          charIdx = 0;
+          setTimeout(typeNext, 400);
+        }
+      }
+
+      function skipAll() {
+        if (done) return;
+        done = true;
+        if (typing) {
+          // 快速显示所有文字
+          linesEl.innerHTML = '';
+          narr.lines.forEach(l => {
+            const el = document.createElement('div');
+            el.className = 'narr-line';
+            el.textContent = l;
+            el.style.opacity = '1';
+            linesEl.appendChild(el);
+          });
+        }
+        overlay.classList.add('narr-fadeout');
+        setTimeout(callback, 600);
+      }
+
+      overlay.__skipCb = skipAll;
+
+      // 键盘/点击跳过
+      function onKeyOrClick(e) {
+        if (e.type === 'click' && e.target.closest('.narr-skip')) return; // 让按钮自己处理
+        if (!typing) {
+          document.removeEventListener('keydown', onKeyOrClick);
+          document.removeEventListener('click', onKeyOrClick);
+          skipAll();
+        }
+      }
+      setTimeout(() => {
+        document.addEventListener('keydown', onKeyOrClick);
+        document.addEventListener('click', onKeyOrClick);
+      }, 300);
+
+      // 自动推进：打完所有字后 2.5 秒自动跳过
+      const autoTimer = setTimeout(() => {
+        if (!done) skipAll();
+      }, narr.lines.join('').length * 50 + narr.lines.length * 500 + 2500);
+      overlay.__autoTimer = autoTimer;
+
+      typeNext();
+    } else {
+      // 无叙事数据的章节，使用简洁过渡
+      overlay.innerHTML = `
+        <div class="scene-transition-text">${chapterNum}</div>
+        <div class="scene-transition-sub">${title}</div>
+      `;
+      document.body.appendChild(overlay);
+      setTimeout(callback, 1200);
+    }
   }
 
   function showAccessDenied(pageNum) {
@@ -283,16 +400,37 @@ const Navigation = (() => {
     const totalPages = 18;
     const progressPct = Math.min(Math.round((currentPage / totalPages) * 100), 100);
 
+    // 动态威胁等级
+    const threatLevels = [
+      { min: 0, max: 4, level: '低', color: 'var(--accent-blue)', label: '常规排查', dot: 'status-blue' },
+      { min: 5, max: 8, level: '中', color: 'var(--accent-orange)', label: '发现可疑活动', dot: 'status-orange' },
+      { min: 9, max: 12, level: '高', color: 'var(--accent-red)', label: '有人在销毁证据', dot: 'status-red' },
+      { min: 13, max: 15, level: '危急', color: 'var(--accent-red)', label: '证据清理队列已激活', dot: 'status-red' },
+      { min: 16, max: 20, level: '紧急', color: 'var(--accent-red)', label: '立即行动 — 时间不多了', dot: 'status-red' },
+    ];
+    const threat = threatLevels.find(t => currentPage >= t.min && currentPage <= t.max) || threatLevels[0];
+
     bottomBar.innerHTML = `
       <div class="bottom-bar-inner">
         <span class="bottom-bar-status">
-          <span class="status-dot ${currentPage >= 15 ? 'status-red' : 'status-blue'}"></span>
-          HZ-7 状态: ${currentPage >= 15 ? '执行中 — 证据正在被清理' : '异常 — 待排查'}
+          <span class="status-dot ${threat.dot}"></span>
+          威胁等级: <strong style="color:${threat.color}">${threat.level}</strong> — ${threat.label}
         </span>
-        <span class="bottom-bar-clues" style="cursor:pointer;" onclick="Navigation.toggleCluePanel()">🔍 已收集线索: ${clueCount}</span>
-        <span class="bottom-bar-progress">调查进度: ${progressPct}%</span>
+        <span class="bottom-bar-clues" style="cursor:pointer;" onclick="Navigation.toggleCluePanel()">🔍 线索: ${clueCount}</span>
+        <span class="bottom-bar-progress">
+          <span class="progress-bar-mini"><span class="progress-bar-fill" style="width:${progressPct}%"></span></span>
+          ${progressPct}%
+        </span>
       </div>
     `;
+
+    // 后半段增加屏幕边缘红光
+    if (currentPage >= 13) {
+      document.body.classList.add('threat-high');
+    }
+    if (currentPage >= 16) {
+      document.body.classList.add('threat-critical');
+    }
   }
 
   function initCluePanel() {
@@ -356,17 +494,26 @@ const Navigation = (() => {
     const shownGuides = NightAudit.get('shownGuides') || [];
     if (shownGuides.includes(currentPage)) return;
 
-    const overlay = document.createElement('div');
-    overlay.className = 'guide-overlay';
-    overlay.innerHTML = `
-      <div class="guide-bubble">
-        <div class="guide-icon">${guide.icon}</div>
-        <div class="guide-title">${guide.title}</div>
-        <div class="guide-text">${guide.text}</div>
-        <button class="guide-dismiss" onclick="this.closest('.guide-overlay').remove()">开始调查</button>
+    // 内嵌式提示条，不打断玩家
+    const toast = document.createElement('div');
+    toast.className = 'guide-toast';
+    toast.innerHTML = `
+      <div class="guide-toast-icon">${guide.icon}</div>
+      <div class="guide-toast-body">
+        <div class="guide-toast-title">${guide.title}</div>
+        <div class="guide-toast-text">${guide.text}</div>
       </div>
+      <button class="guide-toast-close" onclick="this.closest('.guide-toast').classList.add('guide-toast-hide');setTimeout(()=>this.closest('.guide-toast').remove(),400)">✕</button>
     `;
-    document.body.appendChild(overlay);
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('guide-toast-show'), 50);
+    // 8秒后自动消失
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.classList.add('guide-toast-hide');
+        setTimeout(() => toast.remove(), 400);
+      }
+    }, 8000);
 
     shownGuides.push(currentPage);
     NightAudit.set('shownGuides', shownGuides);
@@ -378,6 +525,81 @@ const Navigation = (() => {
     initBottomBar();
     initCluePanel();
     setTimeout(() => showGuide(), 500);
+    setTimeout(() => triggerContextMessages(), 2000);
+  }
+
+  // 即时消息系统 — 角色在关键时刻发送消息
+  const contextMessages = {
+    2: [
+      { from: '赵锐 · 值班主管', avatar: '👨‍💼', text: '我看到你登录了。23条工单是系统自动处理的，别太纠结……', delay: 15000, mood: 'warning' },
+    ],
+    3: [
+      { from: '系统告警', avatar: '⚠️', text: '检测到附件存储异常清理操作。部分文件可能已从缓存中恢复。', delay: 5000, mood: 'system' },
+    ],
+    5: [
+      { from: '匿名', avatar: '👤', text: '你看到那段空白了吗？11分钟。想想在那11分钟里发生了什么。', delay: 20000, mood: 'mystery' },
+    ],
+    7: [
+      { from: '系统告警', avatar: '🔴', text: '邮件回收站清理任务已排入队列。预计 4 小时后执行。', delay: 8000, mood: 'urgent' },
+    ],
+    9: [
+      { from: '匿名', avatar: '👤', text: '你查数据库了？小心点。有人会注意到的。', delay: 12000, mood: 'mystery' },
+    ],
+    13: [
+      { from: '系统', avatar: '🔒', text: '异常活动检测：有人正在尝试修改 svc-admin-0312 的访问日志。', delay: 10000, mood: 'urgent' },
+    ],
+    14: [
+      { from: '赵锐 · 值班主管', avatar: '👨‍💼', text: '你在看监控？我劝你别看了。有些事情，不知道比知道好。', delay: 8000, mood: 'warning' },
+    ],
+    15: [
+      { from: '系统告警', avatar: '🔴', text: '证据清理队列激活。预计 3 分钟内完成全部数据销毁。', delay: 5000, mood: 'critical' },
+    ]
+  };
+
+  function triggerContextMessages() {
+    const currentPage = getCurrentPage();
+    const msgs = contextMessages[currentPage];
+    if (!msgs) return;
+
+    const shownMsgs = NightAudit.get('shownCtxMsgs') || [];
+
+    msgs.forEach(msg => {
+      const msgKey = `${currentPage}-${msg.from}`;
+      if (shownMsgs.includes(msgKey)) return;
+
+      setTimeout(() => {
+        showContextMessage(msg);
+        shownMsgs.push(msgKey);
+        NightAudit.set('shownCtxMsgs', shownMsgs);
+      }, msg.delay);
+    });
+  }
+
+  function showContextMessage(msg) {
+    if (typeof AudioEngine !== 'undefined') AudioEngine.playMsgAlert && AudioEngine.playMsgAlert();
+    const el = document.createElement('div');
+    el.className = `ctx-msg ctx-msg-${msg.mood || 'info'}`;
+    el.innerHTML = `
+      <div class="ctx-msg-avatar">${msg.avatar}</div>
+      <div class="ctx-msg-body">
+        <div class="ctx-msg-from">${msg.from}</div>
+        <div class="ctx-msg-text">${msg.text}</div>
+      </div>
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add('ctx-msg-show'), 50);
+    // 点击关闭
+    el.onclick = () => {
+      el.classList.add('ctx-msg-hide');
+      setTimeout(() => el.remove(), 400);
+    };
+    // 10秒后自动消失
+    setTimeout(() => {
+      if (el.parentNode) {
+        el.classList.add('ctx-msg-hide');
+        setTimeout(() => el.remove(), 400);
+      }
+    }, 10000);
   }
 
   return { goTo, getCurrentPage, init, pageNames, toggleCluePanel, getGameTime, toggleChapterMenu, toggleAudio };
