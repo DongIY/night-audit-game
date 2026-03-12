@@ -193,7 +193,7 @@
         mission: 4,
         columns: ['emp_id','name','department','title','email','access_level'],
         rows: [
-          ['EMP-3127','<span class="anomaly">梁志远</span>','运营部','<span class="anomaly">运营副总裁</span>','liangzy@hlz.com','<span class="anomaly">9 (最高)</span>']
+          ['EMP-3127','<span class="anomaly">何志远</span>','运营部','<span class="anomaly">运营副总裁</span>','hezy@hlz.com','<span class="anomaly">9 (最高)</span>']
         ],
         analysis: null
       },
@@ -201,7 +201,7 @@
         mission: 4,
         columns: ['ip_address','hostname','location','assigned_to','last_login'],
         rows: [
-          ['10.0.31.88','VP-OPS-DESKTOP','<span class="anomaly">15F 运营副总裁办公室</span>','<span class="anomaly">EMP-3127 梁志远</span>','2026-02-15 02:20']
+          ['10.0.31.88','VP-OPS-DESKTOP','<span class="anomaly">15F 运营副总裁办公室</span>','<span class="anomaly">EMP-3127 何志远</span>','2026-02-15 02:20']
         ],
         analysis: null
       }
@@ -346,8 +346,8 @@
 
       if (mission4Queries.size >= 2) {
         completedMissions.add(4);
-        addDiscovery(4, '🎯 <strong>身份确认</strong>：svc-admin-0312 由 EMP-3127 (梁志远) 在 2月13日深夜创建，IP 10.0.31.88 对应15楼运营副总裁办公室。数据库取证完成——铁证如山。');
-        NightAudit.addClue('DB-IDENTITY', { name: '数据库铁证', value: 'svc-admin-0312 → EMP-3127 → 梁志远（运营VP）→ IP: 15F VP办公室', source: 'P8-数据库取证' });
+        addDiscovery(4, '🎯 <strong>身份确认</strong>：svc-admin-0312 由 EMP-3127 (何志远) 在 2月13日深夜创建，IP 10.0.31.88 对应15楼运营副总裁办公室。数据库取证完成——铁证如山。');
+        NightAudit.addClue('DB-IDENTITY', { name: '数据库铁证', value: 'svc-admin-0312 → EMP-3127 → 何志远（运营VP）→ IP: 15F VP办公室', source: 'P8-数据库取证' });
         document.getElementById('m4').classList.add('done');
         document.getElementById('m4').classList.remove('current');
 
@@ -403,7 +403,7 @@
           <span class="alert-icon">✅</span>
           <div>
             <strong>数据库取证完成。</strong>通过 SQL 查询，你建立了从服务账号到真实人员的完整追踪链：<br>
-            <code>svc-admin-0312</code> → <code>EMP-3127</code> → <strong>梁志远（运营副总裁）</strong> → <code>10.0.31.88 (15F VP办公室)</code><br><br>
+            <code>svc-admin-0312</code> → <code>EMP-3127</code> → <strong>何志远（运营副总裁）</strong> → <code>10.0.31.88 (15F VP办公室)</code><br><br>
             下一步：恢复被撤回的审批令牌，获取完整的系统快照。
           </div>
         </div>
