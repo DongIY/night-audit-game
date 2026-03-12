@@ -483,6 +483,36 @@
           }, 600);
         }
         
+        // 情感反馈 — 根据信任度变化显示表情变化
+        if (q.trustDelta >= 15) {
+          setTimeout(() => {
+            addMessage('system', '💧 你听到她深深吸了口气，声音不再那么尖锐了。');
+          }, 1000);
+        } else if (q.trustDelta >= 20) {
+          setTimeout(() => {
+            addMessage('system', '😢 电话那头沉默了几秒。你能感觉到，她在努力控制情绪。');
+          }, 1000);
+        } else if (q.trustDelta <= -5) {
+          setTimeout(() => {
+            addMessage('system', '😤 她的语速明显加快了。你踩到了雷区。');
+          }, 1000);
+        }
+        
+        // 情感反馈 — 根据信任度变化显示表情变化
+        if (q.trustDelta >= 15) {
+          setTimeout(() => {
+            addMessage('system', '💧 你听到她深深吸了口气，声音不再那么尖锐了。');
+          }, 1000);
+        } else if (q.trustDelta >= 20) {
+          setTimeout(() => {
+            addMessage('system', '😢 电话那头沉默了几秒。你能感觉到，她在努力控制情绪。');
+          }, 1000);
+        } else if (q.trustDelta <= -5) {
+          setTimeout(() => {
+            addMessage('system', '😤 她的语速明显加快了。你踩到了雷区。');
+          }, 1000);
+        }
+        
         // 如果信任度 ≤0，对话结束
         if (trust <= 0) {
           setTimeout(() => {
@@ -513,10 +543,17 @@
       // 结束对话
       addMessage('system', '—— 通话结束 · 时长 ' + (questionsAsked * 3 + 2) + ' 分钟 ——');
       
-      if (trust >= 50) {
+      if (trust >= 80) {
         addMessage('victim', '谢谢你……终于有人认真在查了。我把手机里的截图都发到你的加密邮箱了。拜托你一定要查清楚。');
+        setTimeout(() => addMessage('victim', '还有……如果你查到了什么，能不能告诉我一声？我已经连续三天……不敢一个人在家睡了。'), 2000);
+        setTimeout(() => addMessage('system', '📞 通话结束。你放下手机，窗外的天还是漆黑的。但你知道对于许知微来说，黑夜里的恐惧从未消散。'), 4000);
+        if (typeof Interactions !== 'undefined' && Interactions.unlockAchievement) Interactions.unlockAchievement('trust-max');
+      } else if (trust >= 50) {
+        addMessage('victim', '谢谢你……终于有人认真在查了。我把手机里的截图都发到你的加密邮箱了。拜托你一定要查清楚。');
+        setTimeout(() => addMessage('system', '📞 通话结束。她的声音在最后变得很轻。你意识到，这不只是一个工单——这是一个真实的人的安全。'), 3000);
       } else {
         addMessage('victim', '我不确定你们是不是真的在查……算了，我先把手机里的截图自己存好。你们要是真有结果再联系我吧。');
+        setTimeout(() => addMessage('system', '📞 通话结束。她的失望像一块石头压在你胸口。你知道自己可以做得更好。'), 3000);
       }
 
       setTimeout(() => {
