@@ -53,7 +53,7 @@
 
     .frag-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .frag-sender { font-size: 12px; font-weight: 600; }
-    .frag-sender.sender-liang { color: var(--accent-red); }
+    .frag-sender.sender-he { color: var(--accent-red); }
     .frag-sender.sender-lin { color: var(--accent-blue); }
     .frag-sender.sender-zhao { color: var(--accent-orange); }
     .frag-time { font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); }
@@ -219,7 +219,7 @@
             <div class="legend-item">
               <div class="legend-dot" style="background:var(--accent-red);"></div>
               <div>
-                <div class="legend-name">梁志远</div>
+                <div class="legend-name">何志远</div>
                 <div class="legend-role">VP · 产品与增长 · 15F</div>
               </div>
             </div>
@@ -274,7 +274,7 @@
     // 正确顺序的碎片（index = 正确位置）
     const correctOrder = [
       {
-        id: 'f1', sender: '梁志远', senderClass: 'sender-liang',
+        id: 'f1', sender: '何志远', senderClass: 'sender-he',
         text: '你们看到今天那个门锁投诉了吗？一个叫许知微的用户，说 AX13 凌晨自动开锁。',
         time: '██:██', corrupted: true
       },
@@ -284,7 +284,7 @@
         time: '██:██', corrupted: true
       },
       {
-        id: 'f3', sender: '梁志远', senderClass: 'sender-liang',
+        id: 'f3', sender: '何志远', senderClass: 'sender-he',
         text: '这个漏洞影响范围多大？AX13 出货多少台了？',
         time: '██:██', corrupted: true
       },
@@ -294,7 +294,7 @@
         time: '██:██', corrupted: true
       },
       {
-        id: 'f5', sender: '梁志远', senderClass: 'sender-liang',
+        id: 'f5', sender: '何志远', senderClass: 'sender-he',
         text: '不能公开。林昊，你那边能不能先在 AI 客服的知识库里调整一下，把 AX13 的投诉引导到"建议修改密码"就行了？先拖几周，等 Q1 数据报完再说。',
         time: '██:██', corrupted: true
       },
@@ -309,7 +309,7 @@
         time: '██:██', corrupted: true
       },
       {
-        id: 'f8', sender: '梁志远', senderClass: 'sender-liang',
+        id: 'f8', sender: '何志远', senderClass: 'sender-he',
         text: '打补丁就意味着承认漏洞存在。Q1 还有 18 天，先扛过去。赵锐，你把审计日志里 svc-admin-0312 的操作标记为"系统维护"，别让合规那边注意到。这事到此为止，不要外传。',
         time: '██:██', corrupted: true
       }
@@ -328,7 +328,7 @@
         correct: 1
       },
       {
-        text: '梁志远拒绝打补丁的真正原因是什么？',
+        text: '何志远拒绝打补丁的真正原因是什么？',
         options: [
           '补丁有技术风险，可能导致门锁故障',
           '供应商的补丁需要付费购买',
@@ -464,7 +464,7 @@
         if (checkAttempts === 1) {
           Interactions.notify(`顺序不对。${correctCount}/${correctOrder.length} 个位置正确。提示：想想谁先提出问题，谁在回应。`, 'error', 5000);
         } else if (checkAttempts === 2) {
-          Interactions.notify(`还有错误（${correctCount}/${correctOrder.length} 正确）。提示：梁志远先提出漏洞，林昊确认后才讨论方案。`, 'error', 5000);
+          Interactions.notify(`还有错误（${correctCount}/${correctOrder.length} 正确）。提示：何志远先提出漏洞，林昊确认后才讨论方案。`, 'error', 5000);
         } else {
           // 高亮错误位置
           Interactions.notify(`${correctCount}/${correctOrder.length} 正确。注意：赵锐的发言是在林昊提到需要他配合之后。`, 'error', 5000);
@@ -552,8 +552,8 @@
         NightAudit.set('conspiracyDone', true);
         NightAudit.addClue('CONSPIRACY_DATE', { name: '密谋日期', value: '2026年1月28日深夜', source: 'P-深夜密谋' });
         NightAudit.addClue('MOTIVE', { name: '隐瞒动机', value: '保护 Q1 业绩数据，AX13 占大头', source: 'P-深夜密谋' });
-        NightAudit.addClue('CONSPIRACY_ROLE', { name: '角色分工', value: '梁志远决策、林昊执行改KB、赵锐被迫清日志', source: 'P-深夜密谋' });
-        NightAudit.addClue('PATCH_BLOCKED', { name: '补丁真相', value: '免费补丁存在但被梁志远否决', source: 'P-深夜密谋' });
+        NightAudit.addClue('CONSPIRACY_ROLE', { name: '角色分工', value: '何志远决策、林昊执行改KB、赵锐被迫清日志', source: 'P-深夜密谋' });
+        NightAudit.addClue('PATCH_BLOCKED', { name: '补丁真相', value: '免费补丁存在但被何志远否决', source: 'P-深夜密谋' });
 
         const panel = document.getElementById('conclusion-panel');
         panel.innerHTML += `
