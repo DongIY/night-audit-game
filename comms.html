@@ -12,7 +12,7 @@
 
   <div class="main-content">
     <div class="chapter-banner fade-in">
-      <div class="chapter-number">第七章</div>
+      <div class="chapter-number">第十一章</div>
       <div class="chapter-title">暗线浮现</div>
       <div class="chapter-subtitle">从原始快照中提取的通讯记录显示，有人在事前精心策划了这一切</div>
     </div>
@@ -608,6 +608,22 @@
     if (!NightAudit.get('comm_comm-1_done')) {
       setTimeout(() => viewComm(0), 600);
     }
+
+    // 跨章节情报简报
+    (function renderCommsIntel() {
+      const clues = NightAudit.getAllClues();
+      const items = [];
+      if (clues['TOKEN']) items.push('🔑 原始快照已恢复，svc-admin-0312 在 22:38 修改了知识库');
+      if (clues['DB-IDENTITY']) items.push('🔍 数据库追踪链：svc-admin-0312 → EMP-3127（梁志远），解密中留意署名"L"');
+      if (clues['EMAIL-CHAIN']) items.push('📧 邮件考古发现 <strong>AX13</strong> 召回被蓄意压制，记住这个关键产品编号');
+      if (clues['SC-CHAIN']) items.push('📦 供应链证据指向林昊配合掩盖——注意他的名字拼音');
+      if (NightAudit.hasClue('HASH')) items.push('💾 附件哈希 snap-0441 与事故编号 0441 关联');
+      
+      if (items.length > 0) {
+        document.getElementById('comms-intel').style.display = 'block';
+        document.getElementById('comms-intel-items').innerHTML = items.map(i => `<div style="margin-bottom:3px;">${i}</div>`).join('');
+      }
+    })();
   </script>
 </body>
 </html>
