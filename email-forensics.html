@@ -135,7 +135,7 @@
         id: 'f3',
         correctSlot: 2, // 第3封
         from: '林昊 (linhao@hlz.com)',
-        to: '梁志远 (liangzy@hlz.com)',
+        to: '何志远 (hezy@hlz.com)',
         time: '████-██-██ 16:22', // 时间被损坏
         subject: 'Re: Re: AX13 第三方检测结果',
         body: '志远，按你说的，我已经让测试团队把报告里"可远程生成临时口令"那段标注为"理论风险，暂不处理"。但老实说，如果用户真的遇到了这个问题并且有技术能力复现……我建议至少做一个静默修复。',
@@ -146,7 +146,7 @@
         id: 'f1',
         correctSlot: 0, // 第1封
         from: '质量部自动通知 (qa-bot@hlz.com)',
-        to: '梁志远 (liangzy@hlz.com); 林昊 (linhao@hlz.com)',
+        to: '何志远 (hezy@hlz.com); 林昊 (linhao@hlz.com)',
         time: '2026-01-24 09:15',
         subject: 'AX13 批次第三方安全检测异常 — 需处理',
         body: '系统自动通知：AX13-Batch-2025Q4 批次的第三方安全检测报告（编号 SR-20260124-AX13）发现1项高危漏洞：门锁固件允许通过API直接请求生成临时口令，无需物理验证。按公司规程，此类漏洞需在72小时内响应。请相关负责人确认处置方案。',
@@ -156,7 +156,7 @@
       {
         id: 'f5',
         correctSlot: 4, // 第5封
-        from: '梁志远 (liangzy@hlz.com)',
+        from: '何志远 (hezy@hlz.com)',
         to: '林昊 (linhao@hlz.com)',
         time: '████-██-██ ██:██',
         subject: '紧急：有人投诉了',
@@ -167,7 +167,7 @@
       {
         id: 'f2',
         correctSlot: 1, // 第2封
-        from: '梁志远 (liangzy@hlz.com)',
+        from: '何志远 (hezy@hlz.com)',
         to: '林昊 (linhao@hlz.com)',
         time: '2026-01-24 14:33',
         subject: 'Re: AX13 第三方检测结果',
@@ -179,7 +179,7 @@
         id: 'f6',
         correctSlot: 5, // 第6封
         from: '林昊 (linhao@hlz.com)',
-        to: '梁志远 (liangzy@hlz.com)',
+        to: '何志远 (hezy@hlz.com)',
         time: '████-██-██ ██:██',
         subject: 'Re: 紧急：有人投诉了',
         body: '明白，供应链这边我来处理。但如果这个用户真的去找媒体……我们需要一个备案。另外，你让 HZ-7 自动关单这事，审计日志会留记录的——建议也清一下。我先把跟深圳供应商的那几封往来邮件删了。',
@@ -189,7 +189,7 @@
       {
         id: 'f4',
         correctSlot: 3, // 第4封
-        from: '梁志远 (liangzy@hlz.com)',
+        from: '何志远 (hezy@hlz.com)',
         to: '林昊 (linhao@hlz.com)',
         time: '████-██-██ ██:██',
         subject: 'Re: Re: Re: AX13 第三方检测结果',
@@ -334,16 +334,16 @@
             <strong>1月24日 09:15</strong> — 质量部自动系统检测到 AX13 门锁高危漏洞，按规程需72小时内响应。
           </div>
           <div class="analysis-step" style="animation-delay:0.2s">
-            <strong>1月24日 14:33</strong> — 梁志远收到报告后，指示林昊"软化措辞"并暂压报告。原因：<strong>3200台出货量，召回损失超800万</strong>。
+            <strong>1月24日 14:33</strong> — 何志远收到报告后，指示林昊"软化措辞"并暂压报告。原因：<strong>3200台出货量，召回损失超800万</strong>。
           </div>
           <div class="analysis-step" style="animation-delay:0.4s">
             <strong>约1月25-26日</strong> — 林昊执行指示，将漏洞标注为"理论风险，暂不处理"。但他内心有疑虑，建议至少做静默修复。
           </div>
           <div class="analysis-step" style="animation-delay:0.6s">
-            <strong>约1月26-27日</strong> — 梁志远明确拒绝任何形式的修复——"静默修复也要走工单，留痕等于承认漏洞存在"。并警告"不要在邮件里讨论"。
+            <strong>约1月26-27日</strong> — 何志远明确拒绝任何形式的修复——"静默修复也要走工单，留痕等于承认漏洞存在"。并警告"不要在邮件里讨论"。
           </div>
           <div class="analysis-step" style="animation-delay:0.8s">
-            <strong>约2月中旬</strong> — 许知微开始投诉。梁志远紧急指示使用 <strong>svc-admin-0312</strong> 修改 HZ-7 知识库，自动关闭她的工单。
+            <strong>约2月中旬</strong> — 许知微开始投诉。何志远紧急指示使用 <strong>svc-admin-0312</strong> 修改 HZ-7 知识库，自动关闭她的工单。
           </div>
           <div class="analysis-step" style="animation-delay:1s">
             <strong>同期</strong> — 林昊建议清理审计日志，并开始删除供应链往来邮件——也就是我们正在恢复的这些碎片。
@@ -358,7 +358,7 @@
       qPanel.classList.add('visible');
       qPanel.innerHTML = `
         <div class="question-card fade-in">
-          <h4>🧠 推理题 1/3：梁志远选择压制报告的核心动机是什么？</h4>
+          <h4>🧠 推理题 1/3：何志远选择压制报告的核心动机是什么？</h4>
           <p>从邮件链中分析，他反对修复的根本原因是——</p>
           <div class="answer-options" id="q1-options">
             <div class="answer-option" onclick="answerQuestion(1, this, false)">A. 他认为漏洞只是理论风险，不会被实际利用</div>
@@ -376,7 +376,7 @@
             <div class="answer-option" onclick="answerQuestion(2, this, false)">A. 质量部系统 — 它只是自动发通知</div>
             <div class="answer-option" onclick="answerQuestion(2, this, true)">B. 林昊 — 他有顾虑并曾建议修复，是被迫执行的从犯</div>
             <div class="answer-option" onclick="answerQuestion(2, this, false)">C. 许知微 — 她是受害者但不了解内部运作</div>
-            <div class="answer-option" onclick="answerQuestion(2, this, false)">D. 梁志远 — 他是主谋但不会自证其罪</div>
+            <div class="answer-option" onclick="answerQuestion(2, this, false)">D. 何志远 — 他是主谋但不会自证其罪</div>
           </div>
           <div class="form-hint" id="q2-hint"></div>
         </div>
@@ -386,8 +386,8 @@
           <p>哪封邮件的内容直接解释了为什么 HZ-7 会自动关闭许知微的工单？</p>
           <div class="answer-options" id="q3-options">
             <div class="answer-option" onclick="answerQuestion(3, this, false)">A. 第1封 — 检测报告提到了漏洞细节</div>
-            <div class="answer-option" onclick="answerQuestion(3, this, false)">B. 第2封 — 梁志远决定压制报告</div>
-            <div class="answer-option" onclick="answerQuestion(3, this, true)">C. 第5封 — 梁志远指示用 svc-admin-0312 修改 HZ-7 知识库规则</div>
+            <div class="answer-option" onclick="answerQuestion(3, this, false)">B. 第2封 — 何志远决定压制报告</div>
+            <div class="answer-option" onclick="answerQuestion(3, this, true)">C. 第5封 — 何志远指示用 svc-admin-0312 修改 HZ-7 知识库规则</div>
             <div class="answer-option" onclick="answerQuestion(3, this, false)">D. 第6封 — 林昊建议清理审计日志</div>
           </div>
           <div class="form-hint" id="q3-hint"></div>
@@ -406,7 +406,7 @@
         questionsAnswered++;
 
         const explanations = {
-          1: '✅ 正确！梁志远的第4封邮件明确说"静默修复也要走工单，留痕等于承认漏洞存在"——他不是不知道风险，而是刻意选择掩盖。',
+          1: '✅ 正确！何志远的第4封邮件明确说"静默修复也要走工单，留痕等于承认漏洞存在"——他不是不知道风险，而是刻意选择掩盖。',
           2: '✅ 正确！林昊在第3封邮件中表达了疑虑并建议修复，说明他并非心甘情愿。作为"有顾虑的执行者"，他是最有可能被策反的证人。',
           3: '✅ 正确！第5封邮件直接提到"用 svc-admin-0312 修改 HZ-7 的知识库规则，让系统自动把她的工单标为重复投诉并关闭"——这就是 HZ-7 异常行为的根源指令。'
         };
@@ -414,9 +414,9 @@
         hint.style.color = 'var(--accent-green)';
 
         const clueData = {
-          1: { id: 'EMAIL-MOTIVE', name: '压制动机', value: '梁志远明确拒绝任何留痕的修复方式——"留痕=承认"', source: 'P6-邮件推理' },
+          1: { id: 'EMAIL-MOTIVE', name: '压制动机', value: '何志远明确拒绝任何留痕的修复方式——"留痕=承认"', source: 'P6-邮件推理' },
           2: { id: 'EMAIL-WITNESS', name: '潜在证人', value: '林昊是被迫执行的从犯，曾建议修复，可能成为关键证人', source: 'P6-邮件推理' },
-          3: { id: 'EMAIL-HZ7-LINK', name: 'HZ-7指令来源', value: '梁志远指示用svc-admin-0312修改HZ-7知识库→自动关单', source: 'P6-邮件推理' }
+          3: { id: 'EMAIL-HZ7-LINK', name: 'HZ-7指令来源', value: '何志远指示用svc-admin-0312修改HZ-7知识库→自动关单', source: 'P6-邮件推理' }
         };
         NightAudit.addClue(clueData[qNum].id, clueData[qNum]);
 
