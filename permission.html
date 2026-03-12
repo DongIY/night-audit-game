@@ -49,6 +49,12 @@
           根据邮件残留信息和你收集的线索，尝试拼合完整的恢复令牌。
         </p>
 
+        <!-- 跨章节情报简报 -->
+        <div class="intel-briefing" id="intel-briefing" style="margin-bottom:14px;display:none;">
+          <div style="font-size:11px;color:var(--accent-gold);margin-bottom:6px;font-weight:600;">📂 之前调查中获取的相关情报</div>
+          <div id="intel-items" style="font-size:12px;line-height:1.7;color:var(--text-secondary);"></div>
+        </div>
+
         <div class="token-clues" id="token-clues">
           <!-- 动态填充 -->
         </div>
@@ -225,6 +231,23 @@
     });
 
     renderClues();
+
+    // 跨章节情报简报
+    (function renderIntelBriefing() {
+      const clues = NightAudit.getAllClues();
+      const items = [];
+      if (clues['TAGS']) items.push('🏷️ 事故总览中发现异常标签组合：<strong>AX13 + night-risk + duplicate-closed</strong>');
+      if (clues['TS-GAP']) items.push('⏱️ 审计日志中发现停止→继续仅差 <strong>561ms</strong>，存在预设覆盖规则');
+      if (clues['KB-TAMPER'] || NightAudit.get('kbCompared')) items.push('📚 知识库 KB-4412 v2.3 被植入了 TrustHold 覆盖规则');
+      if (clues['EMAIL-CHAIN']) items.push('📧 邮件考古揭示梁志远指示"先压一压" AX13 召回报告');
+      if (clues['SC-MOTIVE']) items.push('💰 供应链追踪发现梁志远 32 万奖金与 AX13 零投诉挂钩');
+      if (clues['DB-IDENTITY']) items.push('🔍 数据库取证确认 svc-admin-0312 → EMP-3127 → <strong>梁志远</strong>');
+      
+      if (items.length > 0) {
+        document.getElementById('intel-briefing').style.display = 'block';
+        document.getElementById('intel-items').innerHTML = items.map(i => `<div style="margin-bottom:3px;">${i}</div>`).join('');
+      }
+    })();
   </script>
 </body>
 </html>
