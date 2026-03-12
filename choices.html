@@ -35,6 +35,14 @@
       <div id="depth-detail" style="font-size:11px;color:var(--text-secondary);margin-top:6px;"></div>
     </div>
 
+    <div class="card fade-in" id="route-advisor" style="margin-bottom:16px;border-left:3px solid var(--accent-gold);">
+      <div style="font-size:12px;color:var(--accent-gold);font-weight:600;margin-bottom:8px;">🧭 路线影响预测</div>
+      <div id="route-title" style="font-size:13px;color:var(--text-primary);font-weight:600;margin-bottom:6px;">将鼠标移到路线卡片上查看影响预测</div>
+      <div id="route-impact" style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+        <span style="opacity:0.5;">每条路线将导致截然不同的结局、评级和后日谈。你的调查深度也会影响最终评价。</span>
+      </div>
+    </div>
+
     <div class="choices-container">
       <!-- 案件摘要 -->
       <div class="case-summary fade-in">
@@ -155,7 +163,7 @@
         icon: '🔇',
         title: '你确定要选择沉默吗？',
         text: '你只修复技术问题，不追究人为因素。梁志远将安然无恙。<br><br>许知微的求救，将继续被折叠在系统消息里。',
-        ending: 'partial',
+        ending: 'failure',
         btnClass: 'btn-danger'
       }
     };
@@ -242,6 +250,52 @@
         }, 2000);
       }
     }
+
+    // 路线影响预测数据
+    const routeImpact = {
+      expose: {
+        title: '🔦 公开揭露 — 影响预测',
+        impact: `<div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">结局走向：</strong>进入终章止损（3分钟倒计时），成功后获得「真相大白」结局</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">评级范围：</strong>S / A+ / A / A-（取决于线索数和证据通道数）</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-green);">后日谈亮点：</strong>梁志远被停职调查、AX13 全面召回、许知微获得正式道歉</div>
+          <div style="color:var(--accent-gold);font-size:11px;">⚠️ 需在终章完成止损操作，否则仍可能失败（C级结局）</div>`
+      },
+      negotiate: {
+        title: '🤝 内部斡旋 — 影响预测',
+        impact: `<div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">结局走向：</strong>直接进入「部分真相」结局，无需止损操作</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">评级范围：</strong>B+ / B / B-（内部斡旋路线上限为 B+）</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-gold);">后日谈亮点：</strong>AX13 静默召回、梁志远被调离但未追责、新的 svc-admin 账号出现</div>
+          <div style="color:var(--accent-orange);font-size:11px;">⚠️ 系统被修补，但权力结构不变——问题可能复发</div>`
+      },
+      cover: {
+        title: '🔇 沉默退出 — 影响预测',
+        impact: `<div style="margin-bottom:6px;"><strong style="color:#8b8b8b;">结局走向：</strong>直接进入「沉默的代价」结局（D级）</div>
+          <div style="margin-bottom:6px;"><strong style="color:#8b8b8b;">评级范围：</strong>固定 D 级 — 你选择了沉默</div>
+          <div style="margin-bottom:6px;"><strong style="color:var(--accent-red);">后日谈警告：</strong>梁志远毫发无损、AX13 召回被标记"低优先级"、两个月后另一起入室事件发生</div>
+          <div style="color:var(--accent-red);font-size:11px;">⛔ 许知微的工单永远停留在"已处理完成"</div>`
+      }
+    };
+
+    // 为选择卡片添加 hover 预览
+    document.querySelectorAll('.choice-card').forEach(card => {
+      const route = card.classList.contains('choice-expose') ? 'expose' :
+                    card.classList.contains('choice-negotiate') ? 'negotiate' : 'cover';
+      card.addEventListener('mouseenter', () => {
+        const data = routeImpact[route];
+        document.getElementById('route-title').textContent = data.title;
+        document.getElementById('route-impact').innerHTML = data.impact;
+        document.getElementById('route-advisor').style.borderLeftColor =
+          route === 'expose' ? 'var(--accent-green)' :
+          route === 'negotiate' ? 'var(--accent-gold)' : '#8b8b8b';
+      });
+      card.addEventListener('mouseleave', () => {
+        if (!selectedChoice) {
+          document.getElementById('route-title').textContent = '将鼠标移到路线卡片上查看影响预测';
+          document.getElementById('route-impact').innerHTML = '<span style="opacity:0.5;">每条路线将导致截然不同的结局、评级和后日谈。你的调查深度也会影响最终评价。</span>';
+          document.getElementById('route-advisor').style.borderLeftColor = 'var(--accent-gold)';
+        }
+      });
+    });
 
     // 初始化
     renderTimeline();
