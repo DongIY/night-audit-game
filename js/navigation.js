@@ -536,14 +536,32 @@ const Navigation = (() => {
     3: [
       { from: '系统告警', avatar: '⚠️', text: '检测到附件存储异常清理操作。部分文件可能已从缓存中恢复。', delay: 5000, mood: 'system' },
     ],
+    4: [
+      { from: '许知微', avatar: '👩', text: '你是……新的调查员？上一个说"在处理了"就再也没回复过。', delay: 3000, mood: 'warning' },
+    ],
     5: [
       { from: '匿名', avatar: '👤', text: '你看到那段空白了吗？11分钟。想想在那11分钟里发生了什么。', delay: 20000, mood: 'mystery' },
+    ],
+    6: [
+      { from: '匿名', avatar: '👤', text: '知识库被改过了。对比事故前48小时的版本。答案就在差异里。', delay: 10000, mood: 'mystery' },
     ],
     7: [
       { from: '系统告警', avatar: '🔴', text: '邮件回收站清理任务已排入队列。预计 4 小时后执行。', delay: 8000, mood: 'urgent' },
     ],
+    8: [
+      { from: '系统', avatar: '📊', text: '供应链数据交叉验证完成。发现 1 处时间线矛盾。', delay: 15000, mood: 'system' },
+    ],
     9: [
       { from: '匿名', avatar: '👤', text: '你查数据库了？小心点。有人会注意到的。', delay: 12000, mood: 'mystery' },
+    ],
+    10: [
+      { from: '匿名', avatar: '👤', text: '你收集的碎片够多了。是时候拼出完整的画面了。', delay: 8000, mood: 'mystery' },
+    ],
+    11: [
+      { from: '系统告警', avatar: '🔴', text: '异常检测：内部通讯频道有加密流量峰值。来源未知。', delay: 6000, mood: 'urgent' },
+    ],
+    12: [
+      { from: '赵锐 · 值班主管', avatar: '👨‍💼', text: '你怎么还在查？已经凌晨4点了。明天一早会有专人处理的，你先休息吧。', delay: 12000, mood: 'warning' },
     ],
     13: [
       { from: '系统', avatar: '🔒', text: '异常活动检测：有人正在尝试修改 svc-admin-0312 的访问日志。', delay: 10000, mood: 'urgent' },
@@ -553,6 +571,9 @@ const Navigation = (() => {
     ],
     15: [
       { from: '系统告警', avatar: '🔴', text: '证据清理队列激活。预计 3 分钟内完成全部数据销毁。', delay: 5000, mood: 'critical' },
+    ],
+    16: [
+      { from: '许知微', avatar: '👩', text: '审计员……你查到什么了吗？我已经连续三天没敢在家睡了。', delay: 5000, mood: 'warning' },
     ]
   };
 
