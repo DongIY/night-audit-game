@@ -239,9 +239,9 @@
       if (clues['TAGS']) items.push('🏷️ 事故总览中发现异常标签组合：<strong>AX13 + night-risk + duplicate-closed</strong>');
       if (clues['TS-GAP']) items.push('⏱️ 审计日志中发现停止→继续仅差 <strong>561ms</strong>，存在预设覆盖规则');
       if (clues['KB-TAMPER'] || NightAudit.get('kbCompared')) items.push('📚 知识库 KB-4412 v2.3 被植入了 TrustHold 覆盖规则');
-      if (clues['EMAIL-CHAIN']) items.push('📧 邮件考古揭示梁志远指示"先压一压" AX13 召回报告');
-      if (clues['SC-MOTIVE']) items.push('💰 供应链追踪发现梁志远 32 万奖金与 AX13 零投诉挂钩');
-      if (clues['DB-IDENTITY']) items.push('🔍 数据库取证确认 svc-admin-0312 → EMP-3127 → <strong>梁志远</strong>');
+      if (clues['EMAIL-CHAIN']) items.push('📧 邮件考古揭示何志远指示"先压一压" AX13 召回报告');
+      if (clues['SC-MOTIVE']) items.push('💰 供应链追踪发现何志远 32 万奖金与 AX13 零投诉挂钩');
+      if (clues['DB-IDENTITY']) items.push('🔍 数据库取证确认 svc-admin-0312 → EMP-3127 → <strong>何志远</strong>');
       
       if (items.length > 0) {
         document.getElementById('intel-briefing').style.display = 'block';
