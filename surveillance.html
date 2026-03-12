@@ -33,7 +33,7 @@
     .cam-header .cam-time{font-size:11px;color:var(--accent-gold);font-family:var(--font-mono)}
     .cam-frame{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;min-height:200px;font-size:13px;line-height:1.7}
     .cam-frame .person-tag{display:inline-block;padding:2px 8px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;margin:0 2px}
-    .person-liang{background:rgba(231,76,60,0.2);color:var(--accent-red)}
+    .person-he{background:rgba(231,76,60,0.2);color:var(--accent-red)}
     .person-lin{background:rgba(230,126,34,0.2);color:var(--accent-orange)}
     .person-zhao{background:rgba(58,123,213,0.2);color:var(--accent-blue)}
     .person-zhou{background:rgba(39,174,96,0.2);color:var(--accent-green)}
@@ -136,17 +136,17 @@
     function timeToPercent(h, m) { return ((h - 22) * 60 + m) / 300 * 100; }
 
     const tracks = [
-      { label: '梁志远', person: 'liang', events: [
-        { start:[22,30], end:[23,0], type:'normal', cam:'cam-lobby-1', desc:'22:30 大堂门禁：刷卡进入大楼（正常）', detail:'<span class="person-tag person-liang">梁志远</span> 刷卡通过大堂闸机进入办公楼。手持笔记本电脑包，步伐匆忙。<br><br>⚠️ 注意：他的正常下班时间是 18:00，深夜返回大楼不寻常。' },
-        { start:[23,45], end:[0,15], type:'anomaly', cam:'cam-15f-corridor', desc:'23:45-00:15 15F走廊：进入VP办公室', detail:'<span class="person-tag person-liang">梁志远</span> 从电梯出来，沿走廊走向 VP 办公室（15F-1502）。打开办公室门后，<strong>走廊监控可以看到办公室内电脑屏幕亮起</strong>。<br><br>⚠️ 与数据库日志比对：svc-admin-0312 的首次知识库修改操作（23:47）发生在他进入办公室 2 分钟后。IP 地址 10.0.31.88 归属此办公室。' },
-        { start:[2,15], end:[2,45], type:'anomaly', cam:'cam-15f-corridor-2', desc:'02:15-02:45 15F走廊：深夜仍在办公室', detail:'<span class="person-tag person-liang">梁志远</span> 办公室门半开，可以看到他坐在电脑前操作。走廊的饮水机显示他期间出来接了两次水。<br><br>⚠️ 此时段恰好是 svc-admin-0312 执行审计日志删除（02:33）、伪造日志（02:34）和附件清理（02:38）的时间。' },
-        { start:[2,50], end:[3,5], type:'normal', cam:'cam-lobby-2', desc:'02:50 大堂门禁：刷卡离开大楼', detail:'<span class="person-tag person-liang">梁志远</span> 刷卡通过大堂闸机离开办公楼。<br><br>离开时间 02:50 — 恰好在 svc-admin-0312 的最后一次操作（02:38 附件清理）完成 12 分钟后。' }
+      { label: '何志远', person: 'he', events: [
+        { start:[22,30], end:[23,0], type:'normal', cam:'cam-lobby-1', desc:'22:30 大堂门禁：刷卡进入大楼（正常）', detail:'<span class="person-tag person-he">何志远</span> 刷卡通过大堂闸机进入办公楼。手持笔记本电脑包，步伐匆忙。<br><br>⚠️ 注意：他的正常下班时间是 18:00，深夜返回大楼不寻常。' },
+        { start:[23,45], end:[0,15], type:'anomaly', cam:'cam-15f-corridor', desc:'23:45-00:15 15F走廊：进入VP办公室', detail:'<span class="person-tag person-he">何志远</span> 从电梯出来，沿走廊走向 VP 办公室（15F-1502）。打开办公室门后，<strong>走廊监控可以看到办公室内电脑屏幕亮起</strong>。<br><br>⚠️ 与数据库日志比对：svc-admin-0312 的首次知识库修改操作（23:47）发生在他进入办公室 2 分钟后。IP 地址 10.0.31.88 归属此办公室。' },
+        { start:[2,15], end:[2,45], type:'anomaly', cam:'cam-15f-corridor-2', desc:'02:15-02:45 15F走廊：深夜仍在办公室', detail:'<span class="person-tag person-he">何志远</span> 办公室门半开，可以看到他坐在电脑前操作。走廊的饮水机显示他期间出来接了两次水。<br><br>⚠️ 此时段恰好是 svc-admin-0312 执行审计日志删除（02:33）、伪造日志（02:34）和附件清理（02:38）的时间。' },
+        { start:[2,50], end:[3,5], type:'normal', cam:'cam-lobby-2', desc:'02:50 大堂门禁：刷卡离开大楼', detail:'<span class="person-tag person-he">何志远</span> 刷卡通过大堂闸机离开办公楼。<br><br>离开时间 02:50 — 恰好在 svc-admin-0312 的最后一次操作（02:38 附件清理）完成 12 分钟后。' }
       ]},
       { label: '林昊', person: 'lin', events: [
         { start:[22,0], end:[22,30], type:'normal', cam:'cam-parking', desc:'22:00 停车场：驾车进入', detail:'<span class="person-tag person-lin">林昊</span> 驾驶白色轿车进入 B2 停车场。<br><br>注意：他的正常下班时间也是 18:00。' },
         { start:[22,35], end:[23,10], type:'normal', cam:'cam-12f', desc:'22:35 12F：进入供应链部办公室', detail:'<span class="person-tag person-lin">林昊</span> 在 12F 供应链管理部办公室，使用电脑操作。<br><br>⚠️ 邮件服务器日志显示：22:40-23:05 期间，有 8 封与深圳锐安科技的往来邮件从林昊的邮箱被永久删除。' },
-        { start:[23,15], end:[23,40], type:'anomaly', cam:'cam-elevator', desc:'23:15 电梯：上至15F', detail:'<span class="person-tag person-lin">林昊</span> 从 12F 乘电梯上至 <strong>15F</strong>。<br><br>⚠️ 林昊的工位在12F，15F是管理层楼层。他没有15F的常规门禁权限——但记录显示他使用了<strong>临时访客码</strong>通过了15F的门禁。这个访客码的审批人是梁志远。' },
-        { start:[0,30], end:[0,45], type:'normal', cam:'cam-lobby-3', desc:'00:30 大堂：刷卡离开', detail:'<span class="person-tag person-lin">林昊</span> 于 00:30 刷卡离开大楼。比梁志远早 2 个多小时离开。' }
+        { start:[23,15], end:[23,40], type:'anomaly', cam:'cam-elevator', desc:'23:15 电梯：上至15F', detail:'<span class="person-tag person-lin">林昊</span> 从 12F 乘电梯上至 <strong>15F</strong>。<br><br>⚠️ 林昊的工位在12F，15F是管理层楼层。他没有15F的常规门禁权限——但记录显示他使用了<strong>临时访客码</strong>通过了15F的门禁。这个访客码的审批人是何志远。' },
+        { start:[0,30], end:[0,45], type:'normal', cam:'cam-lobby-3', desc:'00:30 大堂：刷卡离开', detail:'<span class="person-tag person-lin">林昊</span> 于 00:30 刷卡离开大楼。比何志远早 2 个多小时离开。' }
       ]},
       { label: '赵锐', person: 'zhao', events: [
         { start:[1,30], end:[1,45], type:'normal', cam:'cam-soc', desc:'01:30 SOC监控室：值班', detail:'<span class="person-tag person-zhao">赵锐</span> 在安全运营中心（SOC）监控室值班。屏幕上可以看到他在查看 HZ-7 的异常告警面板。<br><br>✅ 这与他的证词一致——他是第一个发现 HZ-7 异常的人。' },
@@ -159,7 +159,7 @@
     ];
 
     const alibis = [
-      { person:'liang', name:'梁志远', claim:'我昨晚一直在家。公司的事我是今早被电话叫醒才知道的。深夜那段时间我在睡觉。', status:'unknown' },
+      { person:'he', name:'何志远', claim:'我昨晚一直在家。公司的事我是今早被电话叫醒才知道的。深夜那段时间我在睡觉。', status:'unknown' },
       { person:'lin', name:'林昊', claim:'我昨晚确实回了趟公司，大概10点到12点之间，处理一些供应链的文件工作。我全程在12楼自己的工位，没去过其他楼层。', status:'unknown' },
       { person:'zhao', name:'赵锐', claim:'我是夜班值班员，全程在SOC监控室。大约凌晨1点半发现HZ-7异常，立刻上报了。', status:'unknown' },
       { person:'zhou', name:'周薇', claim:'我昨晚加班到12点多，在质量部实验室做AX13的补充测试。之后就回家了。', status:'unknown' }
@@ -222,26 +222,26 @@
     }
 
     function checkContradictions() {
-      // 梁志远：说"一直在家"，但监控显示他22:30进入大楼，02:50离开
-      if (viewedEvents.has('liang-0') && !contradictions.includes('liang-home')) {
-        contradictions.push('liang-home');
-        addContradiction('梁志远说"昨晚一直在家"，但大堂监控显示他 <strong>22:30 刷卡进入大楼</strong>。他在撒谎。');
-        document.getElementById('verdict-liang').innerHTML = '<span class="verdict-lie">🔴 证词与监控矛盾 — 谎言</span>';
-        NightAudit.addClue('SURV-LIANG-LIE', { name: '梁志远说谎', value: '声称一直在家，但监控显示22:30-02:50在公司', source: 'P12-监控回放' });
+      // 何志远：说"一直在家"，但监控显示他22:30进入大楼，02:50离开
+      if (viewedEvents.has('he-0') && !contradictions.includes('he-home')) {
+        contradictions.push('he-home');
+        addContradiction('何志远说"昨晚一直在家"，但大堂监控显示他 <strong>22:30 刷卡进入大楼</strong>。他在撒谎。');
+        document.getElementById('verdict-he').innerHTML = '<span class="verdict-lie">🔴 证词与监控矛盾 — 谎言</span>';
+        NightAudit.addClue('SURV-LIANG-LIE', { name: '何志远说谎', value: '声称一直在家，但监控显示22:30-02:50在公司', source: 'P12-监控回放' });
       }
 
-      // 梁志远：办公室操作时间与svc-admin-0312操作时间完全吻合
-      if (viewedEvents.has('liang-1') && !contradictions.includes('liang-timing')) {
-        contradictions.push('liang-timing');
-        addContradiction('梁志远 23:45 进入VP办公室，<strong>23:47 svc-admin-0312 开始修改知识库</strong>——仅差2分钟。操作IP 10.0.31.88 正是该办公室的设备。时间和地点完美吻合。');
+      // 何志远：办公室操作时间与svc-admin-0312操作时间完全吻合
+      if (viewedEvents.has('he-1') && !contradictions.includes('he-timing')) {
+        contradictions.push('he-timing');
+        addContradiction('何志远 23:45 进入VP办公室，<strong>23:47 svc-admin-0312 开始修改知识库</strong>——仅差2分钟。操作IP 10.0.31.88 正是该办公室的设备。时间和地点完美吻合。');
       }
 
       // 林昊：说"没去过其他楼层"，但监控显示他23:15去了15F
       if (viewedEvents.has('lin-2') && !contradictions.includes('lin-floor')) {
         contradictions.push('lin-floor');
-        addContradiction('林昊说"全程在12楼，没去过其他楼层"，但电梯监控显示他 <strong>23:15 乘电梯上至15F</strong>，使用了梁志远审批的临时访客码。他也在撒谎。');
+        addContradiction('林昊说"全程在12楼，没去过其他楼层"，但电梯监控显示他 <strong>23:15 乘电梯上至15F</strong>，使用了何志远审批的临时访客码。他也在撒谎。');
         document.getElementById('verdict-lin').innerHTML = '<span class="verdict-lie">🔴 证词与监控矛盾 — 谎言（部分）</span>';
-        NightAudit.addClue('SURV-LIN-LIE', { name: '林昊说谎', value: '声称没离开12F，但监控显示23:15去了15F（梁志远办公室楼层）', source: 'P12-监控回放' });
+        NightAudit.addClue('SURV-LIN-LIE', { name: '林昊说谎', value: '声称没离开12F，但监控显示23:15去了15F（何志远办公室楼层）', source: 'P12-监控回放' });
       }
 
       // 赵锐和周薇——证词一致
@@ -257,7 +257,7 @@
       updateProgress();
 
       // 当发现关键矛盾后显示最终判断
-      if (contradictions.includes('liang-home') && contradictions.includes('lin-floor') && contradictions.length >= 4) {
+      if (contradictions.includes('he-home') && contradictions.includes('lin-floor') && contradictions.length >= 4) {
         setTimeout(() => showFinalVerdict(), 1500);
       }
     }
@@ -294,13 +294,13 @@
             <h4>根据监控证据，以下哪个结论最准确？</h4>
             <div class="verdict-options" id="final-options">
               <div class="verdict-opt" onclick="submitVerdict(this, false)">
-                A. 梁志远和林昊都是独立行动的，各自有不同的目的
+                A. 何志远和林昊都是独立行动的，各自有不同的目的
               </div>
               <div class="verdict-opt" onclick="submitVerdict(this, true)">
-                B. 梁志远是主谋，林昊是从犯——林昊深夜上15F是去梁志远办公室接受指示
+                B. 何志远是主谋，林昊是从犯——林昊深夜上15F是去何志远办公室接受指示
               </div>
               <div class="verdict-opt" onclick="submitVerdict(this, false)">
-                C. 赵锐故意推迟上报，给梁志远争取了时间
+                C. 赵锐故意推迟上报，给何志远争取了时间
               </div>
               <div class="verdict-opt" onclick="submitVerdict(this, false)">
                 D. 监控证据不足以确定谁是主谋
@@ -320,11 +320,11 @@
       if (isCorrect) {
         el.classList.add('correct');
         options.forEach(o => { if (o !== el) o.style.pointerEvents = 'none'; });
-        hint.textContent = '✅ 正确！林昊23:15上至15F的时间点，恰好在梁志远23:45开始操作svc-admin-0312之前——他们在办公室会面后，梁志远才开始执行攻击。林昊的角色是面对面接受指示的从犯。';
+        hint.textContent = '✅ 正确！林昊23:15上至15F的时间点，恰好在何志远23:45开始操作svc-admin-0312之前——他们在办公室会面后，何志远才开始执行攻击。林昊的角色是面对面接受指示的从犯。';
         hint.style.color = 'var(--accent-green)';
 
         if (typeof AudioEngine !== 'undefined') AudioEngine.playSuccess();
-        NightAudit.addClue('SURV-CONCLUSION', { name: '监控结论', value: '梁志远=主谋（深夜操控svc-admin），林昊=从犯（上15F接受当面指示）', source: 'P12-监控回放' });
+        NightAudit.addClue('SURV-CONCLUSION', { name: '监控结论', value: '何志远=主谋（深夜操控svc-admin），林昊=从犯（上15F接受当面指示）', source: 'P12-监控回放' });
         NightAudit.set('timelineBuilt', true);
 
         Interactions.notify('📹 监控回放分析完成！', 'success', 3000);
@@ -338,7 +338,7 @@
               <span class="alert-icon">✅</span>
               <div>
                 <strong>监控分析完成。</strong>你通过交叉验证证词和监控记录，确认了：<br>
-                • 梁志远 — <strong>主谋</strong>，全程在15F办公室远程操控 svc-admin-0312<br>
+                • 何志远 — <strong>主谋</strong>，全程在15F办公室远程操控 svc-admin-0312<br>
                 • 林昊 — <strong>从犯</strong>，深夜到15F接受当面指示后删除供应链证据<br>
                 • 赵锐/周薇 — 证词属实，与事件无关<br><br>
                 现在进入服务器终端，获取最后的直接证据。
@@ -369,10 +369,10 @@
     (function renderPriorIntel() {
       const clues = NightAudit.getAllClues();
       const items = [];
-      if (clues['DB-IDENTITY']) items.push('🔍 <strong>数据库取证：</strong>svc-admin-0312 → EMP-3127 → 梁志远（运营副总裁），操作IP: 10.0.31.88（15F VP办公室）');
-      if (clues['COMM-BOSS']) items.push('📨 <strong>通讯解密：</strong>梁志远签名确认指挥了攻击链——他应该在 22:30-03:00 期间在办公室');
+      if (clues['DB-IDENTITY']) items.push('🔍 <strong>数据库取证：</strong>svc-admin-0312 → EMP-3127 → 何志远（运营副总裁），操作IP: 10.0.31.88（15F VP办公室）');
+      if (clues['COMM-BOSS']) items.push('📨 <strong>通讯解密：</strong>何志远签名确认指挥了攻击链——他应该在 22:30-03:00 期间在办公室');
       if (clues['COMM-LINHAO']) items.push('📨 <strong>通讯解密：</strong>林昊（供应链）参与密谋，23:15 发送加密通讯');
-      if (clues['SUSPECT']) items.push('🎯 <strong>人事档案：</strong>已锁定嫌疑人——梁志远(EMP-3127)，有 5 条异常访问记录');
+      if (clues['SUSPECT']) items.push('🎯 <strong>人事档案：</strong>已锁定嫌疑人——何志远(EMP-3127)，有 5 条异常访问记录');
       if (clues['PERSON-EMP-4201']) items.push('👤 <strong>人事档案：</strong>林昊(EMP-4201) 有 3 条异常记录，包括删除 AX13 质检报告');
       if (clues['TOKEN']) items.push('🔑 <strong>权限恢复：</strong>原始快照显示 svc-admin-0312 从 22:58 开始操作');
       if (NightAudit.get('conspiracyDone')) items.push('🕵️ <strong>深夜密谋：</strong>对话碎片显示二人在事发当晚密谋行动');
