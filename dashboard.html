@@ -247,5 +247,41 @@
       Interactions.fadeInElements('.ticket-item', 100);
     }
   </script>
+  <script>
+    // 统计数字跳动动画
+    document.querySelectorAll('.stat-value').forEach(el => {
+      const target = parseInt(el.textContent);
+      if (isNaN(target)) return;
+      el.textContent = '0';
+      let current = 0;
+      const step = Math.max(1, Math.floor(target / 20));
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(interval);
+        }
+        el.textContent = current;
+      }, 50);
+    });
+  </script>
+  <script>
+    // 统计数字跳动动画
+    document.querySelectorAll('.stat-value').forEach(el => {
+      const target = parseInt(el.textContent);
+      if (isNaN(target)) return;
+      el.textContent = '0';
+      let current = 0;
+      const step = Math.max(1, Math.floor(target / 20));
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(interval);
+        }
+        el.textContent = current;
+      }, 50);
+    });
+  </script>
 </body>
 </html>
