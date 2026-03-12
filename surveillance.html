@@ -364,6 +364,24 @@
 
     renderTimeline();
     renderAlibis();
+
+    // 跨章节情报简报
+    (function renderPriorIntel() {
+      const clues = NightAudit.getAllClues();
+      const items = [];
+      if (clues['DB-IDENTITY']) items.push('🔍 <strong>数据库取证：</strong>svc-admin-0312 → EMP-3127 → 梁志远（运营副总裁），操作IP: 10.0.31.88（15F VP办公室）');
+      if (clues['COMM-BOSS']) items.push('📨 <strong>通讯解密：</strong>梁志远签名确认指挥了攻击链——他应该在 22:30-03:00 期间在办公室');
+      if (clues['COMM-LINHAO']) items.push('📨 <strong>通讯解密：</strong>林昊（供应链）参与密谋，23:15 发送加密通讯');
+      if (clues['SUSPECT']) items.push('🎯 <strong>人事档案：</strong>已锁定嫌疑人——梁志远(EMP-3127)，有 5 条异常访问记录');
+      if (clues['PERSON-EMP-4201']) items.push('👤 <strong>人事档案：</strong>林昊(EMP-4201) 有 3 条异常记录，包括删除 AX13 质检报告');
+      if (clues['TOKEN']) items.push('🔑 <strong>权限恢复：</strong>原始快照显示 svc-admin-0312 从 22:58 开始操作');
+      if (NightAudit.get('conspiracyDone')) items.push('🕵️ <strong>深夜密谋：</strong>对话碎片显示二人在事发当晚密谋行动');
+      
+      if (items.length > 0) {
+        document.getElementById('prior-intel').style.display = 'block';
+        document.getElementById('prior-intel-items').innerHTML = items.map(i => `<div style="margin-bottom:3px;">${i}</div>`).join('');
+      }
+    })();
   </script>
 </body>
 </html>
