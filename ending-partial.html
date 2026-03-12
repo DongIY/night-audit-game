@@ -352,5 +352,32 @@ CEO 看了你整理的时间线后沉默了很久，然后说："我理解你的
 
     playEnding();
   </script>
+
+  <script>
+    // v3.0 成就展示
+    setTimeout(() => {
+      const achs = NightAudit.get('achievements') || [];
+      if (achs.length > 0) {
+        const achNames = {
+          'first-clue': '🔍 初露端倪', 'combo-3': '⚡ 火眼金睛', 'combo-5': '🔥 势如破竹',
+          'trust-max': '🤝 以心换心', 'speed-run': '⏱️ 闪电审计', 'all-clues': '🏆 真相大白',
+          'hacker': '💻 白帽骇客', 'detective': '🕵️ 福尔摩斯', 'email-master': '📧 邮件考古学家',
+          'timeline-ace': '📹 时间线大师', 'whisper': '👤 密语者', 'night-owl': '🦉 夜猫子',
+          'paranoid': '👁️ 多疑者',
+        };
+        const container = document.querySelector('.main-content');
+        if (container) {
+          const section = document.createElement('div');
+          section.className = 'card fade-in';
+          section.style.marginTop = '24px';
+          section.innerHTML = '<div class="card-header"><span class="card-title">🏅 解锁成就 (' + achs.length + '/13)</span></div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">' +
+            achs.map(a => '<span class="tag tag-gold" style="font-size:12px;">' + (achNames[a] || a) + '</span>').join('') +
+            '</div>';
+          container.appendChild(section);
+        }
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
