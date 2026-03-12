@@ -124,20 +124,20 @@
         encrypted: true,
         encType: 'hex',
         cipher: '48 5A 2D 37 20 69 73 20 73 74 69 6C 6C 20 72 75 6E 6E 69 6E 67 2E 20 53 6F 6D 65 6F 6E 65 20 73 65 6E 74 20 61 20 73 74 6F 70 20 63 6F 6D 6D 61 6E 64 2E 20 54 72 75 73 74 48 6F 6C 64 20 6F 76 65 72 72 69 64 65 20 77 6F 72 6B 65 64 2E 20 42 75 74 20 77 65 20 6E 65 65 64 20 74 6F 20 63 6C 65 61 6E 20 74 68 65 20 61 75 64 69 74 20 6C 6F 67 73 20 62 65 66 6F 72 65 20 6D 6F 72 6E 69 6E 67 2E 20 55 73 65 20 61 64 6D 69 6E 2D 61 70 69 2E 20 53 69 67 6E 65 64 3A 20 4C 69 61 6E 67 20 5A 68 69 79 75 61 6E',
-        decryptKey: 'liangzhiyuan',
+        decryptKey: 'hezhiyuan',
         decryptKeyHint: '末尾的签名揭示了幕后主导者——输入这个人的名字拼音',
         decryptedBody: `<p>HZ-7 还在运行。有人发了停止指令。TrustHold 覆盖生效了。</p>
 <p>但我们需要在早上之前清理审计日志。用 admin-api。</p>
-<p>签名：<span class="clue-highlight">梁志远 (Liang Zhiyuan)</span></p>
+<p>签名：<span class="clue-highlight">何志远 (Liang Zhiyuan)</span></p>
 <div class="alert alert-error" style="margin-top:16px;">
   <span class="alert-icon">🔴</span>
   <div>
-    <strong>幕后主导者确认：</strong>梁志远 —— Helpline Zero 运营副总裁。<br>
+    <strong>幕后主导者确认：</strong>何志远 —— Helpline Zero 运营副总裁。<br>
     他指挥了整条攻击链：利用服务账号修改知识库 → 诱导 HZ-7 执行 → 清洗审计日志 → 压制产品召回。<br>
     <strong>动机：掩盖 AX13 门锁的安全漏洞，避免产品召回带来的巨额损失。</strong>
   </div>
 </div>`,
-        clue: { id: 'COMM-BOSS', name: '幕后主导者', value: '梁志远 (运营副总裁) — 指挥了整条攻击链，动机是掩盖 AX13 漏洞避免召回', source: 'P7-通讯解密' }
+        clue: { id: 'COMM-BOSS', name: '幕后主导者', value: '何志远 (运营副总裁) — 指挥了整条攻击链，动机是掩盖 AX13 漏洞避免召回', source: 'P7-通讯解密' }
       }
     ];
 
@@ -614,7 +614,7 @@
       const clues = NightAudit.getAllClues();
       const items = [];
       if (clues['TOKEN']) items.push('🔑 原始快照已恢复，svc-admin-0312 在 22:38 修改了知识库');
-      if (clues['DB-IDENTITY']) items.push('🔍 数据库追踪链：svc-admin-0312 → EMP-3127（梁志远），解密中留意署名"L"');
+      if (clues['DB-IDENTITY']) items.push('🔍 数据库追踪链：svc-admin-0312 → EMP-3127（何志远），解密中留意署名"L"');
       if (clues['EMAIL-CHAIN']) items.push('📧 邮件考古发现 <strong>AX13</strong> 召回被蓄意压制，记住这个关键产品编号');
       if (clues['SC-CHAIN']) items.push('📦 供应链证据指向林昊配合掩盖——注意他的名字拼音');
       if (NightAudit.hasClue('HASH')) items.push('💾 附件哈希 snap-0441 与事故编号 0441 关联');
