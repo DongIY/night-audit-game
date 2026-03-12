@@ -148,14 +148,43 @@ const AudioEngine = (() => {
     const osc = c.createOscillator();
     const gain = c.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(120, c.currentTime);
-    osc.frequency.linearRampToValueAtTime(300, c.currentTime + 1.2);
-    gain.gain.setValueAtTime(0.05, c.currentTime);
-    gain.gain.linearRampToValueAtTime(0.08, c.currentTime + 0.6);
-    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 1.5);
+    osc.frequency.setValueAtTime(80, c.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, c.currentTime + 2);
+    gain.gain.setValueAtTime(0.04, c.currentTime);
+    gain.gain.linearRampToValueAtTime(0.06, c.currentTime + 1);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 2.5);
     osc.connect(gain).connect(c.destination);
     osc.start(c.currentTime);
-    osc.stop(c.currentTime + 1.5);
+    osc.stop(c.currentTime + 2.5);
+
+    // 添加环境 shimmer
+    const shimmer = c.createOscillator();
+    const sGain = c.createGain();
+    shimmer.type = 'sine';
+    shimmer.frequency.value = 2400;
+    sGain.gain.setValueAtTime(0, c.currentTime);
+    sGain.gain.linearRampToValueAtTime(0.008, c.currentTime + 1.5);
+    sGain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 2.5);
+    shimmer.connect(sGain).connect(c.destination);
+    shimmer.start(c.currentTime);
+    shimmer.stop(c.currentTime + 2.5);
+  }
+
+  /** 即时消息提示音 — 短促三音提示 */
+  function playMsgAlert() {
+    if (!enabled) return;
+    const c = getCtx();
+    [660, 880, 1100].forEach((freq, i) => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.05, c.currentTime + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + i * 0.08 + 0.15);
+      osc.connect(gain).connect(c.destination);
+      osc.start(c.currentTime + i * 0.08);
+      osc.stop(c.currentTime + i * 0.08 + 0.15);
+    });
   }
 
   /** 倒计时滴答声 */
@@ -261,7 +290,7 @@ const AudioEngine = (() => {
   return {
     isEnabled, toggle,
     playKeystroke, playRingtone, playClueFound, playSuccess, playError,
-    playNotify, playTransition, playTick,
+    playNotify, playTransition, playTick, playMsgAlert,
     startBGM, startUrgentBGM, stopBGM,
     getCtx  // 初始化 AudioContext（需要用户交互）
   };
