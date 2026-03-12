@@ -289,18 +289,32 @@
       NightAudit.set('prologueDone', true);
       NightAudit.visitPage(0);
       
-      // 转场动画
+      // 叙事型转场
       const overlay = document.createElement('div');
       overlay.className = 'scene-transition';
+      overlay.style.background = '#050810';
       overlay.innerHTML = `
-        <div class="scene-transition-text">第一章</div>
-        <div class="scene-transition-sub">紧急登录</div>
+        <div class="narr-container">
+          <div class="narr-lines" style="min-height:80px;">
+            <div class="narr-line" style="opacity:0;">你坐到电脑前。</div>
+            <div class="narr-line" style="opacity:0;">屏幕亮光映上脸。外面的城市还在沉睡。</div>
+            <div class="narr-line" style="opacity:0;color:var(--text-primary);">登录系统。现在。</div>
+          </div>
+        </div>
       `;
       document.body.appendChild(overlay);
-      
+
+      const lines = overlay.querySelectorAll('.narr-line');
+      lines.forEach((line, i) => {
+        setTimeout(() => {
+          line.style.transition = 'opacity 0.8s ease';
+          line.style.opacity = '1';
+        }, 600 + i * 1200);
+      });
+
       setTimeout(() => {
         window.location.href = 'index.html';
-      }, 1800);
+      }, 600 + lines.length * 1200 + 800);
     }
   </script>
 </body>
