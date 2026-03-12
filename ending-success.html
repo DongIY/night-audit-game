@@ -90,6 +90,57 @@
     .epilogue-item strong { color: var(--text-primary); }
     .epilogue-item.epilogue-good { border-color: var(--accent-green); }
     .epilogue-item.epilogue-neutral { border-color: var(--accent-gold); }
+
+    .secret-section {
+      display: none;
+      opacity: 0;
+      margin-top: 24px;
+      text-align: left;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 16px;
+      background: rgba(39,174,96,0.06);
+      border: 1px solid rgba(39,174,96,0.25);
+      border-left: 3px solid var(--accent-green);
+      border-radius: var(--radius-md);
+    }
+    .secret-title {
+      font-size: 13px;
+      color: var(--accent-green);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .secret-content {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .replay-guide {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: none;
+    }
+    .replay-guide-title {
+      color: var(--accent-blue);
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .replay-guide ul {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.7;
+    }
   </style>
 </head>
 <body>
@@ -149,6 +200,16 @@
       <div class="clue-summary" id="clue-summary" style="opacity:0;">
         <div class="clue-summary-title">🔍 调查线索回顾</div>
         <div id="clue-list"></div>
+      </div>
+
+      <div class="secret-section" id="secret-section">
+        <div class="secret-title">📩 来自许知微的未署名回信（隐藏）</div>
+        <div class="secret-content" id="secret-content"></div>
+      </div>
+
+      <div class="replay-guide" id="replay-guide">
+        <div class="replay-guide-title">🧭 继续深挖（重玩建议）</div>
+        <div id="replay-guide-content"></div>
       </div>
 
       <div class="ending-actions" id="ending-actions" style="opacity:0;">
@@ -268,6 +329,7 @@
         const el = document.getElementById('clue-summary');
         el.style.transition = 'opacity 1s ease';
         el.style.opacity = '1';
+        renderReplayGuide(state);
       }, 2800);
 
       // 按钮
@@ -281,8 +343,13 @@
       setTimeout(() => {
         const state = NightAudit.getState();
         const clueCount = Object.keys(state.clues).length;
+        const secretEl = document.getElementById('secret-section');
+        const secretContent = document.getElementById('secret-content');
+        if (!secretEl || !secretContent) return;
+
         if (clueCount >= 20) {
-          const secretEl = document.getElementById('secret-section');
+          const auditor = state.playerName || '审计员';
+          secretContent.textContent = `To ${auditor}：\n\n如果你看到这封信，说明你真的把事情查到了最后。\n谢谢你没有把我的求助当成“重复投诉”。\n那天凌晨我一直在想，会不会没人相信我。\n\n你让系统里那条“已处理完成”的记录，第一次有了人的名字。\n—— 许知微`; 
           secretEl.style.display = 'block';
           setTimeout(() => {
             secretEl.style.transition = 'opacity 1.5s ease';
@@ -297,6 +364,39 @@
         el.style.transition = 'opacity 1s ease';
         el.style.opacity = '1';
       }, 4000);
+    }
+
+    function renderReplayGuide(state) {
+      const guideEl = document.getElementById('replay-guide');
+      const contentEl = document.getElementById('replay-guide-content');
+      if (!guideEl || !contentEl) return;
+
+      const clues = state.clues || {};
+      const missing = [];
+      const keyTargets = [
+        ['TERM-INJECT', '在 `terminal.html` 深挖脚本注入证据（`kb-inject.sh`）'],
+        ['DB-IDENTITY', '在 `db-forensics.html` 完成身份追踪链（EMP-3127）'],
+        ['COMM-BOSS', '在 `comms.html` 还原关键管理层指令'],
+        ['SURV-CONCLUSION', '在 `surveillance.html` 完成监控时间线交叉验证']
+      ];
+
+      keyTargets.forEach(([id, tip]) => {
+        if (!clues[id]) missing.push(tip);
+      });
+
+      const routeTips = {
+        expose: '你这次走了「公开揭露」路线。下次可尝试「内部斡旋」对比制度改变的代价。',
+        negotiate: '你这次走了「内部斡旋」路线。下次可尝试「公开揭露」查看完整正向结局。',
+        cover: '你这次走了「沉默退出」路线。下次可尝试「公开揭露」对比受害者命运变化。'
+      };
+
+      const base = routeTips[state.moralChoice] || '可在 `choices.html` 体验三条不同路线的后果差异。';
+      const list = missing.length
+        ? `<ul>${missing.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`
+        : '<div>你已覆盖关键证据链，可以挑战更快通关（更短用时）或收集全部隐藏线索。</div>';
+
+      contentEl.innerHTML = `<div style="margin-bottom:8px;">${base}</div>${list}`;
+      guideEl.style.display = 'block';
     }
 
     function restartGame() {
