@@ -39,7 +39,38 @@
     <!-- 告警 -->
     <div class="alert alert-error fade-in">
       <span class="alert-icon">⚠️</span>
-      <div>HZ-7 异常行为集中在一组特定标签的工单上。建议使用筛选器组合排查，定位可疑模式。</div>
+      <div>HZ-7 异常行为集中在一组特定标签的工单上。<strong>分析下方的系统告警</strong>，推理出正确的标签组合后使用筛选器锁定目标。</div>
+    </div>
+
+    <!-- 系统告警分析面板 -->
+    <div class="card fade-in" style="margin-bottom:16px;">
+      <div class="card-header">
+        <span class="card-title">📡 系统告警分析</span>
+        <span style="font-size:12px;color:var(--text-secondary)">从告警中提取筛选线索</span>
+      </div>
+      <div style="padding:0;">
+        <div style="display:flex;flex-direction:column;gap:8px;padding:0 4px;">
+          <div class="alert-analysis-item" onclick="analyzeAlert(this, 1)" style="cursor:pointer;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;transition:all 0.2s;">
+            <div style="font-size:13px;color:var(--text-primary);">⚠️ <strong>告警 #1：</strong>HZ-7 在 01:32-01:45 期间自动关闭了 23 条工单，<span style="color:var(--accent-red);">其中 3 条工单被同时标记为"重复投诉"</span></div>
+            <div class="alert-analysis-reveal" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(58,123,213,0.08);border-radius:4px;font-size:12px;color:var(--accent-blue);">
+              💡 <strong>线索：</strong>"重复投诉"对应的系统标签是 <code style="background:var(--bg-deep);padding:1px 4px;border-radius:3px;">duplicate-closed</code>
+            </div>
+          </div>
+          <div class="alert-analysis-item" onclick="analyzeAlert(this, 2)" style="cursor:pointer;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;transition:all 0.2s;">
+            <div style="font-size:13px;color:var(--text-primary);">⚠️ <strong>告警 #2：</strong>被关闭工单中存在 <span style="color:var(--accent-red);">附件清理操作</span>。RiskShield 日志显示清理触发条件为"<span style="color:var(--accent-orange);">深夜高风险判定</span>"</div>
+            <div class="alert-analysis-reveal" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(58,123,213,0.08);border-radius:4px;font-size:12px;color:var(--accent-blue);">
+              💡 <strong>线索：</strong>"深夜高风险判定"对应的风险标签是 <code style="background:var(--bg-deep);padding:1px 4px;border-radius:3px;">night-risk</code>
+            </div>
+          </div>
+          <div class="alert-analysis-item" onclick="analyzeAlert(this, 3)" style="cursor:pointer;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;transition:all 0.2s;">
+            <div style="font-size:13px;color:var(--text-primary);">⚠️ <strong>告警 #3：</strong>3 条人工停止指令均被 TrustHold 系统覆盖。TrustHold 规则显示仅对 <span style="color:var(--accent-red);">特定产品批次</span> 的投诉生效</div>
+            <div class="alert-analysis-reveal" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(58,123,213,0.08);border-radius:4px;font-size:12px;color:var(--accent-blue);">
+              💡 <strong>线索：</strong>TrustHold 仅针对某个产品批次，需要从标签中找到它。提示：查看产品标签中与智能门锁相关的选项。
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:8px 4px 4px;text-align:center;">点击告警查看分析线索（已分析：<span id="alert-count">0</span>/3）</div>
+      </div>
     </div>
 
     <!-- 标签筛选器 -->
@@ -109,6 +140,25 @@
   <script src="js/interactions.js"></script>
   <script>
     const activeTags = new Set();
+    let alertsAnalyzed = new Set();
+
+    function analyzeAlert(el, num) {
+      const reveal = el.querySelector('.alert-analysis-reveal');
+      if (reveal.style.display === 'none') {
+        reveal.style.display = 'block';
+        el.style.borderColor = 'var(--accent-blue)';
+        alertsAnalyzed.add(num);
+        document.getElementById('alert-count').textContent = alertsAnalyzed.size;
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playClick();
+        
+        if (alertsAnalyzed.size === 3) {
+          Interactions.notify('💡 三条告警全部分析完毕！现在用筛选器验证你的推理', 'success', 4000);
+        }
+      } else {
+        reveal.style.display = 'none';
+        el.style.borderColor = 'var(--border)';
+      }
+    }
 
     function toggleTag(el) {
       const tag = el.getAttribute('data-tag');
