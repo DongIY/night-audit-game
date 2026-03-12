@@ -11,7 +11,7 @@
   <div id="top-bar"></div>
   <div class="main-content">
     <div class="chapter-banner fade-in">
-      <div class="chapter-number">第十章</div>
+      <div class="chapter-number">第十六章</div>
       <div class="chapter-title">十字路口</div>
       <div class="chapter-subtitle">你已掌握完整的证据链。接下来的选择，将决定这个故事的结局。</div>
     </div>
@@ -23,6 +23,16 @@
         当系统被人操控，而操控者掌握权力时——<br>
         真相应该以什么方式被揭开？
       </div>
+    </div>
+
+    <!-- 调查深度评价 -->
+    <div class="card fade-in" id="investigation-depth" style="margin-bottom:16px;border-left:3px solid var(--accent-blue);">
+      <div style="font-size:12px;color:var(--accent-blue);font-weight:600;margin-bottom:8px;">📊 调查深度评估</div>
+      <div id="depth-bar" style="height:6px;background:var(--bg-input);border-radius:3px;margin-bottom:8px;overflow:hidden;">
+        <div id="depth-fill" style="height:100%;background:var(--accent-blue);border-radius:3px;transition:width 0.8s ease;width:0%"></div>
+      </div>
+      <div id="depth-text" style="font-size:12px;color:var(--text-secondary);"></div>
+      <div id="depth-detail" style="font-size:11px;color:var(--text-secondary);margin-top:6px;"></div>
     </div>
 
     <div class="choices-container">
@@ -235,6 +245,41 @@
 
     // 初始化
     renderTimeline();
+
+    // 调查深度评估
+    (function renderDepth() {
+      const clues = NightAudit.getAllClues();
+      const total = Object.keys(clues).length;
+      const maxClues = 35; // 理论最大线索数
+      const pct = Math.min(Math.round(total / maxClues * 100), 100);
+      
+      document.getElementById('depth-fill').style.width = pct + '%';
+      
+      let grade, color, msg;
+      if (total >= 25) { grade = 'S级'; color = 'var(--accent-gold)'; msg = '卓越！你几乎挖掘了所有线索。你的选择将基于最充分的证据。'; }
+      else if (total >= 18) { grade = 'A级'; color = 'var(--accent-green)'; msg = '优秀。你掌握了足够的证据来支持你的决定。'; }
+      else if (total >= 12) { grade = 'B级'; color = 'var(--accent-blue)'; msg = '中等。你有一些证据，但可能还有重要线索被遗漏。'; }
+      else { grade = 'C级'; color = 'var(--accent-orange)'; msg = '初步。你的证据链还不完整，回去调查可能会有新发现。'; }
+      
+      document.getElementById('depth-fill').style.background = color;
+      document.getElementById('depth-text').innerHTML = `调查完整度：<strong style="color:${color}">${grade}</strong> — 已收集 <strong>${total}</strong> 条线索 (${pct}%)`;
+      
+      // 列出关键证据链
+      const chains = [];
+      if (clues['TAGS']) chains.push('✅ 异常标签');
+      if (clues['TS-GAP']) chains.push('✅ 时间戳异常');
+      if (clues['HASH']) chains.push('✅ 附件哈希');
+      if (clues['EMAIL-CHAIN']) chains.push('✅ 邮件证据');
+      if (clues['SC-CHAIN']) chains.push('✅ 供应链证据');
+      if (clues['DB-IDENTITY']) chains.push('✅ 数据库追踪');
+      if (clues['COMM-BOSS']) chains.push('✅ 通讯确认');
+      if (clues['SUSPECT']) chains.push('✅ 嫌疑人锁定');
+      if (clues['SURV-CONCLUSION']) chains.push('✅ 监控结论');
+      const missing = 9 - chains.length;
+      if (missing > 0) chains.push(`⬜ 还有 ${missing} 条关键证据链未收集`);
+      
+      document.getElementById('depth-detail').innerHTML = `${msg}<br><span style="font-size:10px;margin-top:4px;display:inline-block;">${chains.join(' · ')}</span>`;
+    })();
 
     // 如果已经做过选择
     if (NightAudit.get('choiceMade')) {
