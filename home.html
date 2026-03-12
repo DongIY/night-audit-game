@@ -315,14 +315,14 @@
     <div class="footer fade-in fade-in-delay-4">
       <p>💡 游戏进度自动保存至浏览器本地 · 关闭页面后可继续</p>
       <p>最佳体验：Chrome / Edge / Firefox · 桌面端 · 建议佩戴耳机 🎧</p>
-      <p class="version">v1.1.0 · Night Audit · 2026</p>
+      <p class="version">v3.0.0 · Night Audit · 2026</p>
     </div>
   </div>
 
   <script>
     // 检测存档
     try {
-      const raw = localStorage.getItem('nightAuditState');
+      const raw = localStorage.getItem('night-audit-save');
       if (raw) {
         const state = JSON.parse(raw);
         const page = state.currentPage || 0;
