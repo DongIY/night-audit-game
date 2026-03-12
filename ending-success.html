@@ -277,6 +277,20 @@
         el.style.opacity = '1';
       }, 3400);
 
+      // 彩蛋：如果线索≥20条，显示许知微的回信
+      setTimeout(() => {
+        const state = NightAudit.getState();
+        const clueCount = Object.keys(state.clues).length;
+        if (clueCount >= 20) {
+          const secretEl = document.getElementById('secret-section');
+          secretEl.style.display = 'block';
+          setTimeout(() => {
+            secretEl.style.transition = 'opacity 1.5s ease';
+            secretEl.style.opacity = '1';
+          }, 100);
+        }
+      }, 4500);
+
       // 引言
       setTimeout(() => {
         const el = document.getElementById('ending-quote');
