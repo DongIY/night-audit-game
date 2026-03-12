@@ -93,6 +93,30 @@
     .epilogue-item.epilogue-good { border-color: var(--accent-green); }
     .epilogue-item.epilogue-neutral { border-color: var(--accent-gold); }
     .epilogue-item.epilogue-bad { border-color: var(--accent-red); }
+
+    .replay-guide {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-gold);
+      border-radius: var(--radius-md);
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: none;
+    }
+    .replay-guide-title {
+      color: var(--accent-gold);
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .replay-guide ul {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.7;
+    }
   </style>
 </head>
 <body>
@@ -152,6 +176,11 @@
       <div class="clue-summary" id="clue-summary" style="opacity:0;">
         <div class="clue-summary-title">🔍 调查线索回顾</div>
         <div id="clue-list"></div>
+      </div>
+
+      <div class="replay-guide" id="replay-guide">
+        <div class="replay-guide-title">🧭 继续深挖（重玩建议）</div>
+        <div id="replay-guide-content"></div>
       </div>
 
       <div class="ending-actions" id="ending-actions" style="opacity:0;">
@@ -264,6 +293,7 @@ CEO 看了你整理的时间线后沉默了很久，然后说："我理解你的
         const el = document.getElementById('clue-summary');
         el.style.transition = 'opacity 1s ease';
         el.style.opacity = '1';
+        renderReplayGuide(state);
       }, 2800);
 
       // 按钮
@@ -279,6 +309,33 @@ CEO 看了你整理的时间线后沉默了很久，然后说："我理解你的
         el.style.transition = 'opacity 1s ease';
         el.style.opacity = '1';
       }, 4000);
+    }
+
+    function renderReplayGuide(state) {
+      const guideEl = document.getElementById('replay-guide');
+      const contentEl = document.getElementById('replay-guide-content');
+      if (!guideEl || !contentEl) return;
+
+      const clues = state.clues || {};
+      const missing = [];
+      const keyTargets = [
+        ['TERM-INJECT', '在终端页深挖脚本注入证据'],
+        ['DB-IDENTITY', '在数据库取证页完成身份追踪链'],
+        ['COMM-BOSS', '在通讯解密页还原关键管理层指令'],
+        ['SURV-CONCLUSION', '在监控页完成时间线交叉验证']
+      ];
+      keyTargets.forEach(([id, tip]) => { if (!clues[id]) missing.push(tip); });
+
+      const tips = [
+        '你选择了「内部斡旋」路线（B级上限）。选择「公开揭露」可挑战 S/A 级评价。',
+        missing.length ? `还有 ${missing.length} 条关键线索未收集：` : '你已覆盖所有关键证据链！'
+      ];
+      const list = missing.length
+        ? `<ul>${missing.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`
+        : '';
+
+      contentEl.innerHTML = `<div style="margin-bottom:8px;">${tips.join('<br>')}</div>${list}`;
+      guideEl.style.display = 'block';
     }
 
     function restartGame() {
