@@ -92,6 +92,30 @@
     .epilogue-item strong { color: var(--text-primary); }
     .epilogue-item.epilogue-bad { border-color: var(--accent-red); }
     .epilogue-item.epilogue-neutral { border-color: #8b8b8b; }
+
+    .replay-guide {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-red);
+      border-radius: var(--radius-md);
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: none;
+    }
+    .replay-guide-title {
+      color: var(--accent-red);
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .replay-guide ul {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.7;
+    }
   </style>
 </head>
 <body>
@@ -133,6 +157,11 @@
       <div class="clue-summary" id="clue-summary" style="opacity:0;">
         <div class="clue-summary-title" id="clue-title">🔍 你曾找到这些线索</div>
         <div id="clue-list"></div>
+      </div>
+
+      <div class="replay-guide" id="replay-guide">
+        <div class="replay-guide-title">🧭 重来一次（重玩建议）</div>
+        <div id="replay-guide-content"></div>
       </div>
 
       <div class="ending-actions" id="ending-actions" style="opacity:0;">
@@ -283,6 +312,7 @@
         const el = document.getElementById('clue-summary');
         el.style.transition = 'opacity 1s ease';
         el.style.opacity = '1';
+        renderReplayGuide(state, isCover);
       }, 2800);
 
       // 按钮
@@ -303,6 +333,31 @@
         quoteEl.style.transition = 'opacity 1s ease';
         quoteEl.style.opacity = '1';
       }, 4000);
+    }
+
+    function renderReplayGuide(state, isCover) {
+      const guideEl = document.getElementById('replay-guide');
+      const contentEl = document.getElementById('replay-guide-content');
+      if (!guideEl || !contentEl) return;
+
+      if (isCover) {
+        contentEl.innerHTML = `
+          <div style="margin-bottom:8px;">你选择了沉默退出（D级）。真相被埋葬，受害者的声音被忽视。</div>
+          <ul>
+            <li>选择「公开揭露」路线，可获得 S/A 级评价，解锁完整正向结局</li>
+            <li>选择「内部斡旋」路线，体验灰色地带的务实抉择（B级）</li>
+            <li>回到调查阶段收集更多线索，提升你的调查评级</li>
+          </ul>`;
+      } else {
+        contentEl.innerHTML = `
+          <div style="margin-bottom:8px;">你在终章止损中超时了（C级）。证据被清理系统销毁。</div>
+          <ul>
+            <li>终章中需在 3 分钟内完成：暂停队列 + 发送证据至 ≥2 个通道</li>
+            <li>提前熟悉终章操作：先「暂停队列」再逐个「发送证据」</li>
+            <li>收集更多线索可获得更高的调查深度评价</li>
+          </ul>`;
+      }
+      guideEl.style.display = 'block';
     }
 
     function restartGame() {
