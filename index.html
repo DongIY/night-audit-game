@@ -1,232 +1,220 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>夜班审计 — 登录</title>
-  <link rel="stylesheet" href="css/global.css">
-  <link rel="stylesheet" href="css/login.css">
-</head>
-<body>
-  <div id="top-bar"></div>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Altman GO</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
 
-  <div class="main-content">
-    <!-- 系统公告 -->
-    <div class="system-banner alert alert-error fade-in">
-      <span class="alert-icon">🔴</span>
-      <div>
-        <strong>紧急通知 — HZ-7 Incident #441</strong><br>
-        HZ-7 客服代理于 01:32 AM 触发多条异常执行操作。事故等级已升至 P1。<br>
-        所有当值审计人员请立即登录系统并开始排查流程。
-      </div>
-    </div>
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
 
-    <div class="login-layout">
-      <!-- 左侧：登录表单 -->
-      <div class="login-panel card fade-in">
-        <div class="login-header">
-          <div class="login-logo">HELPLINE<span class="logo-zero">ZERO</span></div>
-          <div class="login-subtitle">夜班审计终端 — 合规审计员入口</div>
-        </div>
+#canvas {
+	display: block;
+}
 
-        <div class="login-form">
-          <div class="form-group">
-            <label class="form-label">审计员姓名</label>
-            <input type="text" class="input-field" id="player-name" placeholder="请输入你的姓名" maxlength="10" autocomplete="off">
-            <div class="form-hint" style="color:var(--text-secondary);">系统将根据姓名生成临时员工编号</div>
-          </div>
+#canvas:focus {
+	outline: none;
+}
 
-          <div class="form-group">
-            <label class="form-label">员工编号</label>
-            <input type="text" class="input-field input-mono" id="employee-id" value="——等待姓名输入——" readonly style="color:var(--text-secondary);">
-          </div>
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
 
-          <div class="form-group">
-            <label class="form-label">临时验证码</label>
-            <input type="text" class="input-field input-mono" id="auth-code" placeholder="请输入验证码" maxlength="7" autocomplete="off">
-            <div class="form-hint" id="code-hint">请根据右侧邮件中的提示拼合验证码</div>
-          </div>
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
 
-          <button class="btn-primary login-btn" id="login-btn" onclick="attemptLogin()">
-            🔓 登录系统
-          </button>
-        </div>
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
 
-        <div class="login-footer">
-          <div class="login-footer-line">事故等级: <span class="tag tag-red">P1 — CRITICAL</span></div>
-          <div class="login-footer-line">事故编号: HZ-7 Incident #441</div>
-          <div class="login-footer-line">当前时间: <span class="mono-text">2026-02-15 02:47:12 CST</span></div>
-        </div>
-      </div>
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
 
-      <!-- 右侧：邮件面板 -->
-      <div class="email-panel card fade-in">
-        <div class="email-header">
-          <span class="email-icon">📧</span>
-          <span class="email-title">待读邮件 (2)</span>
-        </div>
+#status-splash.show-image--false {
+	display: none;
+}
 
-        <!-- 邮件1：授权通知（验证码被加密了） -->
-        <div class="email-item">
-          <div class="email-meta">
-            <span class="email-from">system@helplinezero.com</span>
-            <span class="email-time">02:41 AM</span>
-          </div>
-          <div class="email-subject">【紧急】夜班审计临时授权通知</div>
-          <div class="email-body">
-            <p>审计员，你好：</p>
-            <p>根据 P1 级事故响应流程，你已被临时授权接入 HZ-7 Incident #441 的审计调查权限。</p>
-            <p>你的临时验证码格式为：<strong>{前缀}-{事故编号的4位数字}</strong></p>
-            <div class="email-code-box" style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);">
-              <span class="email-code-label" style="color:var(--accent-red);">⚠️ 验证码传输异常</span>
-              <span style="font-size:12px;color:var(--text-secondary);">验证码因网络异常未能完整显示。<br>请根据下方安全提示和系统公告中的信息自行拼合。</span>
-            </div>
-            <p style="margin-top:8px;"><strong>安全提示：</strong></p>
-            <ul>
-              <li>验证码前缀由 <strong>2 个字母</strong>组成：取自"<strong>N</strong>ight <strong>A</strong>udit"的首字母</li>
-              <li>前缀与数字之间使用 <strong>短横线 (-)</strong> 连接</li>
-              <li>数字部分是本次事故的编号（4位数，含前导零）</li>
-            </ul>
-            <p class="email-sign">—— Helpline Zero 自动化运维系统</p>
-          </div>
-        </div>
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
 
-        <!-- 邮件2：同事提示 -->
-        <div class="email-item" style="margin-top:12px;">
-          <div class="email-meta">
-            <span class="email-from">赵锐 (zhaorui@hlz.com)</span>
-            <span class="email-time">02:44 AM</span>
-          </div>
-          <div class="email-subject">验证码格式</div>
-          <div class="email-body">
-            <p>嘿，系统邮件的验证码是不是又没显示？服务器最近老出问题。</p>
-            <p>格式是这样的：<code style="background:var(--bg-input);padding:2px 6px;border-radius:3px;">XX-YYYY</code>，XX 是两个大写字母前缀，YYYY 是 Incident 后面的编号数字。</p>
-            <p>往上看系统公告里有事故编号，公告里 # 后面的数字就是。快登录吧，情况不太好。</p>
-            <p class="email-sign">—— 赵锐</p>
-          </div>
-        </div>
-      </div>
-    </div>
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
 
-    <!-- 底部系统公告滚动 -->
-    <div class="scroll-banner fade-in">
-      <div class="scroll-banner-inner">
-        <span class="scroll-item">⚠️ HZ-7 在过去 75 分钟内自动关闭了 23 条高风险工单</span>
-        <span class="scroll-sep">|</span>
-        <span class="scroll-item">⚠️ 3 条人工停止指令被忽略</span>
-        <span class="scroll-sep">|</span>
-        <span class="scroll-item">⚠️ 附件清理任务仍在执行中</span>
-        <span class="scroll-sep">|</span>
-        <span class="scroll-item">🔴 事故升级至 P1 — 需要立即排查</span>
-      </div>
-    </div>
-  </div>
+#status-progress, #status-notice {
+	display: none;
+}
 
-  <div id="bottom-bar"></div>
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
 
-  <script src="js/game-state.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/navigation.js"></script>
-  <script src="js/interactions.js"></script>
-  <script>
-    // 根据姓名生成员工编号
-    function generateEmpId(name) {
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = ((hash << 5) - hash) + name.charCodeAt(i);
-        hash = hash & 0xFFFF;
-      }
-      return 'CSA-' + (hash % 9000 + 1000);
-    }
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 
-    // 姓名输入事件——自动生成员工编号
-    document.getElementById('player-name').addEventListener('input', function() {
-      const name = this.value.trim();
-      const empField = document.getElementById('employee-id');
-      if (name.length > 0) {
-        empField.value = generateEmpId(name);
-        empField.style.color = 'var(--accent-green)';
-      } else {
-        empField.value = '——等待姓名输入——';
-        empField.style.color = 'var(--text-secondary)';
-      }
-    });
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
 
-    // 登录尝试次数（用于渐进提示）
-    let loginAttempts = 0;
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
 
-    function attemptLogin() {
-      const name = document.getElementById('player-name').value.trim();
-      const code = document.getElementById('auth-code').value.trim().toUpperCase();
-      const hint = document.getElementById('code-hint');
-      const input = document.getElementById('auth-code');
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
 
-      // 检查姓名
-      if (!name) {
-        Interactions.notify('请先输入你的姓名', 'error');
-        document.getElementById('player-name').focus();
-        return;
-      }
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":92920,"index.wasm":37685705},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
 
-      if (code === 'NA-0441') {
-        // 登录成功
-        input.classList.remove('input-error');
-        NightAudit.set('loginComplete', true);
-        NightAudit.set('playerName', name);
-        NightAudit.set('employeeId', generateEmpId(name));
-        NightAudit.addClue('VCODE', { name: '临时验证码', value: 'NA-0441', source: 'P1-登录页' });
-        Interactions.notify('验证成功 — 正在进入事故总览...', 'success');
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
 
-        setTimeout(() => {
-          Navigation.goTo(2);
-        }, 1200);
-      } else if (code === '') {
-        hint.textContent = '请根据邮件提示拼合验证码';
-        hint.style.color = 'var(--accent-orange)';
-      } else {
-        loginAttempts++;
-        input.classList.add('input-error');
-        // 渐进提示：每次错误给出更多线索
-        if (loginAttempts === 1) {
-          hint.textContent = '验证码错误。提示：仔细阅读两封邮件和顶部公告。';
-          hint.style.color = 'var(--accent-red)';
-        } else if (loginAttempts === 2) {
-          hint.textContent = '再想想：前缀 = "Night Audit"的首字母，数字 = 事故编号';
-          hint.style.color = 'var(--accent-red)';
-        } else if (loginAttempts >= 3) {
-          hint.innerHTML = '格式：<code style="background:var(--bg-input);padding:1px 4px;border-radius:3px;">XX-YYYY</code>，XX=系统名称首字母，YYYY=公告中 # 后面的数字（补前导零到4位）';
-          hint.style.color = 'var(--accent-orange)';
-        }
-        Interactions.notify('验证码错误', 'error');
-      }
-    }
+	let initializing = true;
+	let statusMode = '';
 
-    // 回车提交
-    document.getElementById('auth-code').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') attemptLogin();
-    });
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
 
-    // 如果没完成序章，跳回序章
-    if (!NightAudit.get('prologueDone')) {
-      window.location.href = 'prologue.html';
-    }
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
 
-    // 如果已经登录过，自动跳转
-    if (NightAudit.get('loginComplete')) {
-      const lastPage = NightAudit.get('currentPage');
-      if (lastPage > 1) {
-        Interactions.notify('检测到存档，正在恢复...', 'info');
-        setTimeout(() => Navigation.goTo(lastPage), 1000);
-      }
-    }
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
 
-    // 恢复已保存的玩家姓名
-    const savedName = NightAudit.get('playerName');
-    if (savedName) {
-      document.getElementById('player-name').value = savedName;
-      document.getElementById('employee-id').value = generateEmpId(savedName);
-      document.getElementById('employee-id').style.color = 'var(--accent-green)';
-    }
-  </script>
-</body>
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
 </html>
+
